@@ -1,239 +1,194 @@
-# Marimo for GPU Experimentation on Brev
+# SGLang Notebooks for Marimo
 
-Run interactive Python notebooks with **Marimo** on high-performance **NVIDIA GPU instances** powered by Brev. Perfect for AI/ML experimentation, model training, and data science workflows that require GPU acceleration.
+Interactive SGLang tutorials converted to **Marimo** notebooks. Learn how to use SGLang for high-performance LLM serving with these step-by-step guides.
 
-## What is Marimo?
+## What is SGLang?
 
-[Marimo](https://marimo.io) is a modern, reactive Python notebook that runs as an interactive web app. Unlike traditional notebooks:
+[SGLang](https://github.com/sgl-project/sglang) is a fast serving system for large language models (LLMs) that provides:
 
-- 🔄 **Reactive** - Cells automatically re-run when dependencies change
-- 🐍 **Pure Python** - Notebooks are `.py` files that can be versioned and imported
-- 🚀 **Production-ready** - Deploy notebooks as apps with a single command
-- 🎨 **Interactive** - Rich UI components and real-time visualizations
-- 🔒 **Reproducible** - No hidden state, guaranteed execution order
+- 🚀 **High Performance** - Optimized inference with RadixAttention, PagedAttention, and other optimizations
+- 🔌 **OpenAI-Compatible APIs** - Drop-in replacement for OpenAI API endpoints
+- 🎯 **Flexible** - Support for chat completions, vision models, embeddings, and more
+- ⚡ **Efficient** - Advanced batching, continuous batching, and memory management
 
-## Why Marimo + GPU on Brev?
+## 📚 Notebook Tutorials
 
-- **Instant GPU Access** - Launch NVIDIA GPU instances with one click
-- **Pre-configured Environment** - Python, CUDA drivers, and ML libraries ready to go
-- **Cost Effective** - Pay only for what you use
-- **Powerful Hardware** - Access to L40S, H100, H200, B200 and other high-end GPUs
-- **Interactive Development** - Experiment with models and visualize results in real-time
+Follow these notebooks in order to learn SGLang from basics to advanced usage:
 
-Perfect for:
-- Training and fine-tuning ML models
-- Running inference at scale
-- Computer vision and image processing
-- LLM experimentation and deployment
-- Data analysis with GPU-accelerated libraries
+### 1. [Sending Requests](01_send_request.py)
+**Start here!** Learn the fundamentals of launching an SGLang server and sending requests.
 
-## 🚀 Quick Deploy - GPU Launchables
+- Launch an SGLang server
+- Send basic generation requests
+- Stream responses in real-time
+- Understand the core API structure
 
-Deploy Marimo with GPU access instantly using these pre-configured environments:
+### 2. [OpenAI APIs - Completions](02_openai_api_completions.py)
+Use SGLang as a drop-in replacement for OpenAI's completions API.
 
-| GPU Configuration | vRAM | Use Case | Deploy |
-|-------------------|------|----------|--------|
-| **1x L4** | 24GB | Entry-Level, Learning, Small Models, Cost-Efficient Experimentation | [![Click here to deploy.](https://brev-assets.s3.us-west-1.amazonaws.com/nv-lb-dark.svg)](https://brev.nvidia.com/launchable/deploy?launchableID=env-34AyUxoxN1PiXP3PWSMFzI96LoJ) |
-| **2x L4** | 48GB | Budget Multi-GPU Learning, Distributed Training Basics, Affordable Dual GPU | [![Click here to deploy.](https://brev-assets.s3.us-west-1.amazonaws.com/nv-lb-dark.svg)](https://brev.nvidia.com/launchable/deploy?launchableID=env-34AyhYNiJvuGmDXaQNx2GKsfEOF) |
-| **4x L4** | 96GB | Affordable 4-Way Parallelism, Budget Advanced Distributed Training | [![Click here to deploy.](https://brev-assets.s3.us-west-1.amazonaws.com/nv-lb-dark.svg)](https://brev.nvidia.com/launchable/deploy?launchableID=env-34AyrsZfLGVXgf7uvU5uy0Wlqk4) |
-| **8x L4** | 192GB | Maximum Affordable Multi-GPU, Full-Scale Budget Distributed Training | [![Click here to deploy.](https://brev-assets.s3.us-west-1.amazonaws.com/nv-lb-dark.svg)](https://brev.nvidia.com/launchable/deploy?launchableID=env-34AyzR6QpMosvNIAYEzpGBaD9HN) |
-| **1x L40S** | 48GB | General ML, Training, Inference | [![Click here to deploy.](https://brev-assets.s3.us-west-1.amazonaws.com/nv-lb-dark.svg)](https://brev.nvidia.com/launchable/deploy?launchableID=env-34AI5Pvj2cwyqzv50io8WJBpK4t) |
-| **2x L40S** | 96GB | Cost-Effective Multi-GPU, Dual Workloads, Medium-Scale Training | [![Click here to deploy.](https://brev-assets.s3.us-west-1.amazonaws.com/nv-lb-dark.svg)](https://brev.nvidia.com/launchable/deploy?launchableID=env-34AwGQISnFO1OpD4qNYsDOhBe7o) |
-| **4x L40S** | 192GB | Budget-Friendly 4-Way Training, Cost-Optimized Distributed Workloads | [![Click here to deploy.](https://brev-assets.s3.us-west-1.amazonaws.com/nv-lb-dark.svg)](https://brev.nvidia.com/launchable/deploy?launchableID=env-34AwTkK08OIOdJLGMwXuD18xxay) |
-| **8x L40S** | 384GB | Full-Scale Budget Training, Maximum Cost-Efficient Multi-GPU | [![Click here to deploy.](https://brev-assets.s3.us-west-1.amazonaws.com/nv-lb-dark.svg)](https://brev.nvidia.com/launchable/deploy?launchableID=env-34AwfmieYtZQWJ3eeMXax29ulQG) |
-| **1x A100 80GB** | 80GB | High-Performance Training, Research, Large Models | [![Click here to deploy.](https://brev-assets.s3.us-west-1.amazonaws.com/nv-lb-dark.svg)](https://brev.nvidia.com/launchable/deploy?launchableID=env-34Av9Vi6v0PTWsVCtDqSUmRuVzP) |
-| **2x A100 80GB** | 160GB | Multi-GPU Training, Model Parallelism, Distributed Workloads | [![Click here to deploy.](https://brev-assets.s3.us-west-1.amazonaws.com/nv-lb-dark.svg)](https://brev.nvidia.com/launchable/deploy?launchableID=env-34AvYjrbnA3lZbmW8sN29ZqGFAF) |
-| **4x A100 80GB** | 320GB | Advanced Distributed Training, Large Model Development | [![Click here to deploy.](https://brev-assets.s3.us-west-1.amazonaws.com/nv-lb-dark.svg)](https://brev.nvidia.com/launchable/deploy?launchableID=env-34Avm9MwlJDIXeZk4jEdFmRH1k7) |
-| **8x A100 80GB** | 640GB | Full-Scale Distributed Training, Production LLM Training | [![Click here to deploy.](https://brev-assets.s3.us-west-1.amazonaws.com/nv-lb-dark.svg)](https://brev.nvidia.com/launchable/deploy?launchableID=env-34AvvhRvhnxqnMQbcYtEHMkYjLQ) |
-| **1x H100** | 80GB | Latest Architecture, Maximum Single-GPU Performance, Fastest Training | [![Click here to deploy.](https://brev-assets.s3.us-west-1.amazonaws.com/nv-lb-dark.svg)](https://brev.nvidia.com/launchable/deploy?launchableID=env-34Ax8eN3fyZfSYiANwIiJ2Gd3Eg) |
-| **4x H100** | 320GB | Advanced Next-Gen Training, Extreme Performance Multi-GPU | [![Click here to deploy.](https://brev-assets.s3.us-west-1.amazonaws.com/nv-lb-dark.svg)](https://brev.nvidia.com/launchable/deploy?launchableID=env-34AxM881OaulzI5fly5jt6zCSC0) |
-| **8x H100** | 640GB | Next-Gen Performance, Maximum Throughput, Cutting-Edge Workloads | [![Click here to deploy.](https://brev-assets.s3.us-west-1.amazonaws.com/nv-lb-dark.svg)](https://brev.nvidia.com/launchable/deploy?launchableID=env-34AkM7NRseSAShZynOmqGYNKzfq) |
-| **1x H200** | 141GB | Newest Architecture, Maximum Memory, Flagship Single-GPU | [![Click here to deploy.](https://brev-assets.s3.us-west-1.amazonaws.com/nv-lb-dark.svg)](https://brev.nvidia.com/launchable/deploy?launchableID=env-34AxYf6IWzxYvihAGrsMDLsboP9) |
-| **8x H200** | 1.13TB | Ultimate Configuration, Maximum Memory & Performance, Absolute Peak | [![Click here to deploy.](https://brev-assets.s3.us-west-1.amazonaws.com/nv-lb-dark.svg)](https://brev.nvidia.com/launchable/deploy?launchableID=env-34AxjDMpVPA5sT4nUMd05T1SDrM) |
-| **8x B200** | 1.44TB | Next-Gen Blackwell Architecture, Future-Proof, Maximum Innovation | [![Click here to deploy.](https://brev-assets.s3.us-west-1.amazonaws.com/nv-lb-dark.svg)](https://brev.nvidia.com/launchable/deploy?launchableID=env-34Ay8KHKSXzQZHDGfNbgR1JLkcH) |
+- Chat completions API (`chat/completions`)
+- Text completions API (`completions`)
+- Parameter configuration (temperature, top_p, stop sequences, etc.)
+- Structured outputs (JSON, Regex, EBNF)
+- LoRA adapter support
 
-### What's Included
+### 3. [OpenAI APIs - Vision](03_openai_api_vision.py)
+Work with vision-language models through OpenAI-compatible APIs.
 
-Each deployment includes:
-- ✅ Marimo notebook server (running on port 8080)
-- ✅ NVIDIA GPU drivers and CUDA toolkit
-- ✅ GPU validation notebook
-- ✅ Example notebooks from [marimo-team/examples](https://github.com/marimo-team/examples)
-- ✅ Pre-installed ML/AI libraries (PyTorch, TensorFlow, etc.)
-- ✅ Data science toolkit (pandas, numpy, polars, altair, plotly)
-- ✅ No password authentication for ease of use
+- Vision model support
+- Image input handling
+- Multi-modal completions
+- Vision-specific parameters
 
-## Getting Started
+### 4. [OpenAI APIs - Embedding](04_openai_api_embeddings.py)
+Generate embeddings using SGLang's embedding models.
 
-### Deploying Your Environment
+- Embedding model support
+- Text-to-embedding conversion
+- Batch embedding generation
+- Embedding API usage patterns
 
-1. **Choose your GPU configuration** - Click the **Deploy Now** button for your desired environment from the table above
-2. **Review and deploy** - On the launchable page, click **Deploy Launchable** 
-3. **Sign in** - Create an account or log in to Brev with your email (NVIDIA account required)
-4. **Monitor deployment** - Click **Go to Instance Page** to watch your environment spin up
-5. **Wait for completion** - Watch for three green status indicators:
-   - ✅ **Running** - Instance is live
-   - ✅ **Built** - Environment setup complete
-   - ✅ **Completed** - Post-install script finished (typically 2-3 minutes)
-6. **Access Marimo** - Navigate to the **Access** tab and click the secure link for port 8080
-7. **Authenticate** - Log in to Marimo using your Brev account email
-8. **Start building** - You're ready to experiment with GPU-accelerated notebooks!
+### 5. [Offline Engine API](05_offline_engine_api.py)
+Use SGLang's offline engine for batch processing and offline inference.
 
-### First Steps
+- Offline engine setup
+- Batch processing workflows
+- Non-streaming inference
+- Performance optimization
 
-Once inside Marimo:
+### 6. [SGLang Native APIs](06_native_api.py)
+Explore SGLang's native Python APIs for advanced use cases.
 
-1. **Validate GPU** - Open `gpu_validation.py` to verify your GPU is detected and working
-2. **Run the benchmark** - Click the GPU test button to see CPU vs GPU performance
-3. **Explore examples** - Browse the notebook directory for inspiration
-4. **Create your own** - Click **Create a new notebook** to start experimenting
+- Native API structure
+- Direct model access
+- Custom inference patterns
+- Advanced features
 
-### Environment Layout
+## 🚀 Getting Started
 
-After deployment, your environment will be organized as follows:
+### Prerequisites
+
+- Marimo running (access at `http://localhost:8080`)
+- SGLang installed (`pip install sglang`)
+- GPU with CUDA support (recommended)
+
+### Running the Notebooks
+
+1. **Open Marimo** - Navigate to `http://localhost:8080` in your browser
+2. **Open a notebook** - Click on any numbered notebook (e.g., `01_send_request.py`)
+3. **Follow along** - Execute cells in order and read the documentation
+4. **Experiment** - Modify parameters and see results in real-time
+
+### Notebook Order
+
+These notebooks are numbered to match the [SGLang documentation](https://docs.sglang.ai/basic_usage/) order:
 
 ```
-~/marimo-examples/           # All notebooks (examples + GPU validation)
-  ├── gpu_validation.py      # GPU testing and monitoring notebook
-  ├── youtube_summary/       # Example: YouTube video summarization
-  ├── nlp_span_comparison/   # Example: NLP analysis
-  └── ...                    # More example notebooks
+01_send_request.py              → Start here
+02_openai_api_completions.py    → OpenAI-compatible APIs
+03_openai_api_vision.py         → Vision models
+04_openai_api_embeddings.py     → Embedding models
+05_offline_engine_api.py         → Offline processing
+06_native_api.py                → Advanced native APIs
 ```
 
-Marimo runs automatically as a systemd service and serves notebooks from `~/marimo-examples/`.
+## 📖 What You'll Learn
 
-## Example Notebooks
+### Core Concepts
+- **Server Launch** - How to start and configure SGLang servers
+- **Request Handling** - Sending requests and processing responses
+- **Streaming** - Real-time response streaming
+- **Batching** - Efficient batch processing
 
-### GPU Validation (`gpu_validation.py`)
-- Check GPU availability and specifications for all GPUs
-- **Real-time auto-refreshing GPU metrics** (utilization, memory, temperature)
-  - **Auto-refreshes every 2 seconds** - seamless updates, no user interaction needed
-  - **Smooth CSS transitions** - progress bars animate fluidly, no layout jumps
-  - Modern card-based design with gradient progress bars
-  - Shows metrics for all GPUs in multi-GPU systems
-  - Timestamp shows exact time of last update
-- **Industry-standard [gpu-burn](https://github.com/wilicc/gpu-burn) stress test** with toggle switch
-  - Uses the **actual gpu-burn tool** (not a custom implementation!)
-  - **Automatically installs gpu-burn** on first use (via source compile)
-  - Automatically stresses **ALL GPUs simultaneously**
-  - **Runs as background process** - metrics update in real-time!
-  - Turn on/off to start/stop GPU stress (clean process management)
-  - Uses 95% GPU memory + double-precision operations
-  - Battle-tested tool used in datacenters worldwide
-  - Watch metrics auto-refresh and see GPUs hit 100% utilization live
-  - See temperature, utilization, and memory spike across all GPUs
-  - Shows process ID (PID) for monitoring
-- nvidia-smi output (collapsed by default)
+### API Usage
+- **OpenAI Compatibility** - Using SGLang as OpenAI replacement
+- **Chat Completions** - Conversational AI workflows
+- **Text Completions** - Traditional text generation
+- **Vision APIs** - Multi-modal model support
+- **Embeddings** - Vector generation for RAG and search
 
-### Marimo Examples
-Includes curated notebooks from [marimo-team/examples](https://github.com/marimo-team/examples):
-- LLM and AI workflows
-- Data visualization
-- Interactive dashboards
-- SQL and database integration
-- And more...
+### Advanced Features
+- **Structured Outputs** - JSON, Regex, EBNF constraints
+- **LoRA Adapters** - Fine-tuned model adapters
+- **Offline Processing** - Batch inference workflows
+- **Native APIs** - Direct model access
 
-## Advanced Usage
+## 🔧 Configuration
 
-### Service Management
+### Server Launch
 
-Marimo runs as a systemd service and starts automatically:
+Each notebook demonstrates launching an SGLang server. Common options include:
 
-```bash
-# Check service status
-sudo systemctl status marimo
+```python
+# Basic server launch
+python -m sglang.launch_server \
+    --model-path <model-name> \
+    --port <port-number>
 
-# View logs
-sudo journalctl -u marimo -f
+# With FlashInfer backend (recommended for sm75+ GPUs)
+python -m sglang.launch_server \
+    --model-path <model-name> \
+    --attention-backend flashinfer
 
-# Restart the service
-sudo systemctl restart marimo
+# With LoRA adapters
+python -m sglang.launch_server \
+    --model-path <model-name> \
+    --enable-lora \
+    --lora-paths adapter_a=/path/to/adapter
 ```
 
-### Customization
+### Model Selection
 
-Set these environment variables before running the setup script:
+SGLang supports many models. Examples in notebooks use:
+- `Qwen/Qwen2.5-0.5B-Instruct` - Small, fast model for testing
+- Other HuggingFace models work similarly
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `MARIMO_REPO_URL` | Git repository URL for notebooks | `https://github.com/marimo-team/examples.git` |
-| `MARIMO_NOTEBOOKS_DIR` | Directory name for notebooks | `marimo-examples` |
-| `MARIMO_PORT` | Port for Marimo server | `8080` |
+## 📚 Additional Resources
 
-### Use Your Own Notebooks
+- **SGLang Documentation**: https://docs.sglang.ai
+- **SGLang GitHub**: https://github.com/sgl-project/sglang
+- **SGLang Paper**: [RadixAttention: SGLang](https://arxiv.org/abs/2402.14862)
+- **Marimo Documentation**: https://docs.marimo.io
 
-```bash
-export MARIMO_REPO_URL="https://github.com/your-username/your-notebooks.git"
-bash setup.sh
-```
+## 🛠️ Troubleshooting
 
-### Pre-installed Packages
+### Server Won't Start
+- Check GPU availability: `nvidia-smi`
+- Verify CUDA installation: `nvcc --version`
+- Ensure model path is correct
+- Check port availability
 
-The environment includes:
-- **Data manipulation**: `polars`, `pandas`, `numpy`, `scipy`, `pyarrow`
-- **Visualization**: `altair`, `plotly`, `matplotlib`, `seaborn`
-- **Machine learning**: `scikit-learn`, `torch`, `tensorflow`
-- **AI/LLM**: `openai`, `anthropic`, `instructor`, `openai-whisper`
-- **Database**: `marimo[sql]`, `duckdb`, `sqlalchemy`
-- **Media processing**: `opencv-python`, `yt-dlp`
-- **Utilities**: `requests`, `beautifulsoup4`, `pillow`, `python-dotenv`
+### Import Errors
+- Install SGLang: `pip install sglang --pre`
+- Install FlashInfer: `pip install flashinfer-python`
+- Verify Python version (3.10+)
 
-## Troubleshooting
+### Performance Issues
+- Use FlashInfer backend for sm75+ GPUs (T4, A10, A100, L4, L40S, H100)
+- Adjust batch size based on GPU memory
+- Check GPU utilization: `nvidia-smi`
 
-### Service Issues
-```bash
-# Check service status
-sudo systemctl status marimo
+## 📝 Notes
 
-# View logs
-sudo journalctl -u marimo -n 50
+- These notebooks are converted from the official [SGLang documentation](https://docs.sglang.ai)
+- Original Jupyter notebooks available at: https://github.com/sgl-project/sgl-project.github.io
+- Notebooks are designed to be run sequentially for best learning experience
+- All notebooks use Marimo's reactive execution model
 
-# Restart
-sudo systemctl restart marimo
-```
+## 🤝 Contributing
 
-### GPU Not Detected
-```bash
-# Check NVIDIA driver
-nvidia-smi
+Found an issue or want to improve these notebooks? Contributions welcome!
 
-# Check CUDA
-nvcc --version
+1. Fork the repository
+2. Make your changes
+3. Submit a pull request
 
-# Verify PyTorch GPU access
-python3 -c "import torch; print(torch.cuda.is_available())"
-```
+## 📄 License
 
-### Can't Access Marimo
-- Ensure port 8080 is open in your firewall
-- Check if marimo is running: `sudo systemctl status marimo`
-- View logs for errors: `sudo journalctl -u marimo -f`
+These notebooks follow the same license as SGLang and Marimo.
 
-## Manual Setup
+---
 
-If you want to use this setup script in your own repo:
+**Happy Learning! 🎉**
 
-```bash
-# Download the setup script
-curl -O https://raw.githubusercontent.com/brevdev/setup-scripts/main/marimo/setup.sh
-chmod +x setup.sh
-
-# Run it
-bash setup.sh
-```
-
-The setup script is maintained in the [brevdev/setup-scripts](https://github.com/brevdev/setup-scripts/blob/main/marimo/setup.sh) repository.
-
-## Resources
-
-- [Marimo Documentation](https://docs.marimo.io)
-- [Marimo Examples](https://github.com/marimo-team/examples)
-- [Brev Documentation](https://docs.nvidia.com/brev)
-- [NVIDIA NGC](https://catalog.ngc.nvidia.com/)
-
-## Contributing
-
-Have ideas for improving this setup or want to add more GPU examples? Contributions are welcome! 
-
-- **Setup script improvements**: [github.com/brevdev/setup-scripts](https://github.com/brevdev/setup-scripts)
-- **GPU notebooks and examples**: [github.com/brevdev/marimo](https://github.com/brevdev/marimo)
+Start with `01_send_request.py` and work through the tutorials in order.
