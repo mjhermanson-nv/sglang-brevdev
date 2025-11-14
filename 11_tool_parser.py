@@ -1,6 +1,6 @@
 import marimo
 
-__generated_with = "0.17.7"
+__generated_with = "0.17.8"
 app = marimo.App()
 
 
@@ -9,8 +9,68 @@ def _(mo):
     mo.md(r"""
     # Tool Parser
 
-    This guide demonstrates how to use SGLang’s [Function calling](https://platform.openai.com/docs/guides/function-calling) functionality.
+    This guide demonstrates how to use SGLang's [Function calling](https://platform.openai.com/docs/guides/function-calling) functionality.
+
+    ⚠️ **Important: HuggingFace Authentication Required**
+
+    This notebook uses gated Meta Llama models requiring HuggingFace authentication.
+
+    **To access gated models:**
+    1. Visit the model pages and accept the licenses:
+       - https://huggingface.co/meta-llama/Llama-3.2-1B-Instruct
+       - https://huggingface.co/meta-llama/Llama-3.3-70B-Instruct
+       - https://huggingface.co/meta-llama/Llama-4-Scout-17B-16E-Instruct
+    2. Generate a token at https://huggingface.co/settings/tokens
+       - **Important**: If using a fine-grained token, enable "public gated repositories" permission
+       - Or use a classic token (which has this permission by default)
+    3. Enter your token in the cell below
+
+    **Token Requirements:**
+    - Must have access to the gated models (request access first)
+    - Fine-grained tokens need "public gated repositories" permission enabled
+    - Classic tokens work automatically
     """)
+    return
+
+
+@app.cell(hide_code=True)
+def _():
+    import marimo as mo
+    hf_token_input = mo.ui.text(
+        label="HuggingFace Token",
+        placeholder="hf_...",
+        kind="password",
+        full_width=True
+    )
+    hf_token_input
+    return hf_token_input, mo
+
+
+@app.cell
+def _(hf_token_input):
+    import os
+
+    if hf_token_input.value:
+        token = hf_token_input.value
+        os.environ["HF_TOKEN"] = token
+        os.environ["HUGGINGFACE_HUB_TOKEN"] = token
+
+        # Also login programmatically to huggingface_hub
+        try:
+            from huggingface_hub import login
+            login(token=token, add_to_git_credential=False)
+            print(f"✓ HuggingFace token set and authenticated")
+            print(f"⚠️  Note: If you get 403 errors, ensure your token has 'public gated repositories' permission")
+            print(f"   (Fine-grained tokens need this enabled; classic tokens have it by default)")
+        except ImportError:
+            print(f"✓ HuggingFace token set (install huggingface_hub for programmatic login)")
+        except Exception as e:
+            print(f"⚠️  Token set but login failed: {e}")
+            print(f"   Make sure your token has access to gated repositories")
+    elif os.environ.get("HF_TOKEN") or os.environ.get("HUGGINGFACE_HUB_TOKEN"):
+        print("✓ Using existing HuggingFace token from environment")
+    else:
+        print("⚠️  No HuggingFace token set. Please enter your token above.")
     return
 
 
@@ -593,12 +653,6 @@ def _(mo):
     3. Add the new detector to the MultiFormatParser class that manages all the format detectors.
     """)
     return
-
-
-@app.cell
-def _():
-    import marimo as mo
-    return (mo,)
 
 
 if __name__ == "__main__":
