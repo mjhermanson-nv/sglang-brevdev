@@ -296,6 +296,7 @@ fi
 # Using --pre to allow pre-release versions as recommended
 # Suppress dependency conflict warnings (openai version is pinned above)
 pip3 install --no-cache-dir --upgrade --pre "sglang" 2>&1 | grep -v -E "WARNING: Error parsing dependencies|ERROR: pip's dependency resolver" || true
+pip install --upgrade filelock
 
 # Note: If FlashInfer has issues, you can reinstall it with:
 # pip3 install --upgrade flashinfer-python --force-reinstall --no-deps
