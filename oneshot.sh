@@ -8,9 +8,6 @@ set -euo pipefail
 # Defaults to cloning marimo-team/examples repository
 # Set MARIMO_REPO_URL to use your own notebooks repository
 # Set MARIMO_REPO_URL="" to skip cloning entirely
-#
-# ALWAYS includes Brev-specific notebooks from https://github.com/brevdev/marimo.git
-# These are merged into the notebooks directory alongside MARIMO_REPO_URL notebooks
 ####################################################################################
 
 # Detect the actual Brev user dynamically
@@ -158,42 +155,6 @@ fi
 # These are optional - notebooks will fall back to CPU equivalents if not available
 # To install RAPIDS:
 #   conda install -c rapidsai -c conda-forge -c nvidia cudf=24.08 cugraph=24.08 python=3.11 cuda-version=12.0
-
-##### Always pull Brev-specific marimo notebooks and merge them in #####
-(echo ""; echo "##### Adding Brev marimo notebooks to notebooks directory #####"; echo "";)
-BREV_MARIMO_REPO="https://github.com/brevdev/marimo.git"
-BREV_MARIMO_TEMP="/tmp/brevdev-marimo-$$"
-
-# Clone Brev marimo repo to temporary location
-if git clone "$BREV_MARIMO_REPO" "$BREV_MARIMO_TEMP" 2>/dev/null; then
-    echo "  Cloned Brev marimo notebooks"
-    
-    # Copy all .py files (marimo notebooks) from the root of brevdev/marimo
-    for notebook in "$BREV_MARIMO_TEMP"/*.py; do
-        [ -f "$notebook" ] || continue
-        NOTEBOOK_NAME=$(basename "$notebook")
-        
-        # Skip setup files
-        if [[ "$NOTEBOOK_NAME" == "setup.py" ]] || [[ "$NOTEBOOK_NAME" == "__"* ]]; then
-            continue
-        fi
-        
-        cp "$notebook" "$HOME/$NOTEBOOKS_DIR/$NOTEBOOK_NAME" || true
-        echo "  [+] Copied: $NOTEBOOK_NAME"
-        NOTEBOOKS_COPIED=$((NOTEBOOKS_COPIED + 1))
-    done
-    
-    # Clean up temporary directory
-    rm -rf "$BREV_MARIMO_TEMP"
-    
-    if [ "$NOTEBOOKS_COPIED" -gt 0 ]; then
-        echo "  Total Brev notebooks copied: $NOTEBOOKS_COPIED"
-    else
-        echo "  No Brev notebooks found to copy"
-    fi
-else
-    echo "  Warning: Could not clone Brev marimo repo, skipping"
-fi
 
 ##### Ensure notebooks directory exists with proper permissions #####
 (echo ""; echo "##### Ensuring notebooks directory exists #####"; echo "";)
