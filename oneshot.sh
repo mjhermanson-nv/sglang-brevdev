@@ -162,6 +162,41 @@ if [ -n "$CUDA_HOME_FOUND" ]; then
     echo "   LD_LIBRARY_PATH includes $CUDA_LIB_PATH"
 fi
 
+# Check for CUDA compiler (nvcc) - needed by FlashInfer for JIT compilation
+if ! command -v nvcc &> /dev/null; then
+    echo ""
+    echo "⚠️  CUDA compiler (nvcc) not found"
+    echo "   FlashInfer requires nvcc to compile CUDA kernels at runtime"
+    echo "   Attempting to install CUDA development toolkit..."
+    
+    # Try to install nvcc via nvidia-cuda-toolkit package
+    sudo apt-get update -qq
+    if sudo apt-get install -y nvidia-cuda-toolkit 2>/dev/null; then
+        echo "✅ Installed CUDA toolkit (nvcc available)"
+        # Update CUDA_HOME if nvcc is now available
+        if command -v nvcc &> /dev/null; then
+            NVCC_PATH=$(command -v nvcc)
+            POSSIBLE_CUDA_HOME=$(dirname "$(dirname "$NVCC_PATH")")
+            if [ -d "$POSSIBLE_CUDA_HOME" ]; then
+                CUDA_HOME_FOUND="$POSSIBLE_CUDA_HOME"
+                if [ -d "$POSSIBLE_CUDA_HOME/lib64" ]; then
+                    CUDA_LIB_PATH="$POSSIBLE_CUDA_HOME/lib64"
+                fi
+                export CUDA_HOME="$CUDA_HOME_FOUND"
+                export LD_LIBRARY_PATH="$CUDA_LIB_PATH:${LD_LIBRARY_PATH:-}"
+                echo "   Updated CUDA_HOME=$CUDA_HOME"
+            fi
+        fi
+    else
+        echo "⚠️  Could not install CUDA toolkit automatically"
+        echo "   FlashInfer will fail to compile kernels. Options:"
+        echo "   1. Install manually: sudo apt-get install -y nvidia-cuda-toolkit"
+        echo "   2. Use alternative backend: --attention-backend triton"
+    fi
+else
+    echo "✅ CUDA compiler (nvcc) found: $(command -v nvcc)"
+fi
+
 ##### Install Python and pip if not available #####
 if ! command -v pip3 &> /dev/null; then
     (echo ""; echo "##### Installing Python and pip3 #####"; echo "";)
