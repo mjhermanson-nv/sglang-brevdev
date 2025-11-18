@@ -98,31 +98,49 @@ NOTEBOOKS_COPIED=0
 ##### Detect and configure CUDA environment #####
 (echo ""; echo "##### Detecting CUDA installation #####"; echo "";)
 
-# Common CUDA installation paths
-CUDA_PATHS=(
-    "/usr/local/cuda"
-    "/usr/local/cuda-12.1"
-    "/usr/local/cuda-12.0"
-    "/usr/local/cuda-11.8"
-    "/usr/local/cuda-11.7"
-    "/opt/cuda"
-)
-
 CUDA_HOME_FOUND=""
 CUDA_LIB_PATH=""
 
-# Check each CUDA path for lib64 directory
-for cuda_path in "${CUDA_PATHS[@]}"; do
-    if [ -d "$cuda_path" ] && [ -d "$cuda_path/lib64" ]; then
-        # Verify it contains CUDA libraries
-        if ls "$cuda_path/lib64"/libcudart.so* 2>/dev/null | grep -q .; then
-            CUDA_HOME_FOUND="$cuda_path"
-            CUDA_LIB_PATH="$cuda_path/lib64"
-            echo "✅ Found CUDA installation at: $CUDA_HOME_FOUND"
-            break
+# Check if CUDA runtime library exists
+if ls /usr/lib/x86_64-linux-gnu/libcudart.so* 2>/dev/null | grep -q .; then
+    CUDA_HOME_FOUND="/usr"
+    CUDA_LIB_PATH="/usr/lib/x86_64-linux-gnu"
+    echo "✅ Found CUDA runtime library at: $CUDA_LIB_PATH"
+else
+    # Check common CUDA installation paths
+    CUDA_PATHS=(
+        "/usr/local/cuda"
+        "/usr/local/cuda-12.1"
+        "/usr/local/cuda-12.0"
+        "/usr/local/cuda-11.8"
+        "/opt/cuda"
+    )
+    
+    for cuda_path in "${CUDA_PATHS[@]}"; do
+        if [ -d "$cuda_path" ] && [ -d "$cuda_path/lib64" ]; then
+            if ls "$cuda_path/lib64"/libcudart.so* 2>/dev/null | grep -q .; then
+                CUDA_HOME_FOUND="$cuda_path"
+                CUDA_LIB_PATH="$cuda_path/lib64"
+                echo "✅ Found CUDA installation at: $CUDA_HOME_FOUND"
+                break
+            fi
+        fi
+    done
+    
+    # If still not found, try to install CUDA runtime library
+    if [ -z "$CUDA_HOME_FOUND" ]; then
+        echo "⚠️  CUDA runtime library not found, attempting to install..."
+        sudo apt-get update -qq
+        if sudo apt-get install -y libcudart11.0 2>/dev/null; then
+            CUDA_HOME_FOUND="/usr"
+            CUDA_LIB_PATH="/usr/lib/x86_64-linux-gnu"
+            echo "✅ Installed CUDA runtime library (libcudart11.0)"
+        else
+            echo "⚠️  Could not install CUDA runtime library automatically"
+            echo "   SGLang may still work with PyTorch's bundled CUDA, but sgl_kernel may fail"
         fi
     fi
-done
+fi
 
 # Set CUDA environment variables if found
 if [ -n "$CUDA_HOME_FOUND" ]; then
@@ -142,10 +160,6 @@ if [ -n "$CUDA_HOME_FOUND" ]; then
     echo "✅ CUDA environment variables configured"
     echo "   CUDA_HOME=$CUDA_HOME"
     echo "   LD_LIBRARY_PATH includes $CUDA_LIB_PATH"
-else
-    echo "⚠️  CUDA installation not found in common locations"
-    echo "   SGLang may still work with PyTorch's bundled CUDA libraries"
-    echo "   If you encounter CUDA errors, install CUDA toolkit or set CUDA_HOME manually"
 fi
 
 ##### Install Python and pip if not available #####
