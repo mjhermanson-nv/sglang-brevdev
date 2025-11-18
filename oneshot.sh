@@ -175,15 +175,17 @@ else
     
     # Try to install nvcc via nvidia-cuda-toolkit package
     sudo apt-get update -qq
-    if sudo apt-get install -y nvidia-cuda-toolkit 2>&1 | grep -q -E "(Setting up|already the newest)"; then
-        # Installation succeeded or was already installed
-        # Refresh PATH and check again
+    INSTALL_OUTPUT=$(sudo apt-get install -y nvidia-cuda-toolkit 2>&1)
+    INSTALL_EXIT=$?
+    
+    if [ $INSTALL_EXIT -eq 0 ]; then
+        # Installation succeeded - refresh PATH and check again
         export PATH="/usr/local/cuda/bin:/usr/local/cuda-12.1/bin:/usr/local/cuda-12.0/bin:/usr/local/cuda-11.8/bin:$PATH"
         if command -v nvcc &> /dev/null; then
             NVCC_PATH=$(command -v nvcc)
             echo "✅ Installed CUDA toolkit (nvcc available at: $NVCC_PATH)"
         else
-            # Check common installation locations
+            # Check common installation locations after apt install
             for cuda_bin in /usr/local/cuda/bin/nvcc /usr/local/cuda-12.1/bin/nvcc /usr/local/cuda-12.0/bin/nvcc /usr/local/cuda-11.8/bin/nvcc /usr/bin/nvcc; do
                 if [ -f "$cuda_bin" ]; then
                     NVCC_PATH="$cuda_bin"
@@ -193,8 +195,9 @@ else
             done
         fi
     else
-        echo "⚠️  Could not install CUDA toolkit automatically via apt"
+        echo "⚠️  Could not install CUDA toolkit automatically via apt (exit code: $INSTALL_EXIT)"
         echo "   Checking for existing nvcc in common locations..."
+        
         # Check common installation locations even if apt install failed
         for cuda_bin in /usr/local/cuda/bin/nvcc /usr/local/cuda-12.1/bin/nvcc /usr/local/cuda-12.0/bin/nvcc /usr/local/cuda-11.8/bin/nvcc; do
             if [ -f "$cuda_bin" ]; then
@@ -204,12 +207,25 @@ else
             fi
         done
         
+        # Try conda if available
+        if [ -z "$NVCC_PATH" ] && command -v conda &> /dev/null; then
+            echo "   Attempting to install via conda..."
+            if conda install -c nvidia -y cuda-toolkit 2>/dev/null; then
+                export PATH="$CONDA_PREFIX/bin:$PATH"
+                if command -v nvcc &> /dev/null; then
+                    NVCC_PATH=$(command -v nvcc)
+                    echo "✅ Installed CUDA toolkit via conda (nvcc available at: $NVCC_PATH)"
+                fi
+            fi
+        fi
+        
         if [ -z "$NVCC_PATH" ]; then
             echo "⚠️  nvcc not found. FlashInfer will fail to compile kernels."
             echo "   Options:"
             echo "   1. Install manually: sudo apt-get install -y nvidia-cuda-toolkit"
-            echo "   2. Download CUDA toolkit from: https://developer.nvidia.com/cuda-downloads"
-            echo "   3. Use alternative backend: --attention-backend triton"
+            echo "   2. Install via conda: conda install -c nvidia cuda-toolkit"
+            echo "   3. Download CUDA toolkit from: https://developer.nvidia.com/cuda-downloads"
+            echo "   4. Use alternative backend: --attention-backend triton"
         fi
     fi
 fi
