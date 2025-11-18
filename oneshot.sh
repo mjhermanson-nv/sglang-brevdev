@@ -163,7 +163,11 @@ if [ -n "$CUDA_HOME_FOUND" ]; then
 fi
 
 # Check for CUDA compiler (nvcc) - needed by FlashInfer for JIT compilation
-if ! command -v nvcc &> /dev/null; then
+NVCC_PATH=""
+if command -v nvcc &> /dev/null; then
+    NVCC_PATH=$(command -v nvcc)
+    echo "✅ CUDA compiler (nvcc) found: $NVCC_PATH"
+else
     echo ""
     echo "⚠️  CUDA compiler (nvcc) not found"
     echo "   FlashInfer requires nvcc to compile CUDA kernels at runtime"
@@ -171,30 +175,78 @@ if ! command -v nvcc &> /dev/null; then
     
     # Try to install nvcc via nvidia-cuda-toolkit package
     sudo apt-get update -qq
-    if sudo apt-get install -y nvidia-cuda-toolkit 2>/dev/null; then
-        echo "✅ Installed CUDA toolkit (nvcc available)"
-        # Update CUDA_HOME if nvcc is now available
+    if sudo apt-get install -y nvidia-cuda-toolkit 2>&1 | grep -q -E "(Setting up|already the newest)"; then
+        # Installation succeeded or was already installed
+        # Refresh PATH and check again
+        export PATH="/usr/local/cuda/bin:/usr/local/cuda-12.1/bin:/usr/local/cuda-12.0/bin:/usr/local/cuda-11.8/bin:$PATH"
         if command -v nvcc &> /dev/null; then
             NVCC_PATH=$(command -v nvcc)
-            POSSIBLE_CUDA_HOME=$(dirname "$(dirname "$NVCC_PATH")")
-            if [ -d "$POSSIBLE_CUDA_HOME" ]; then
-                CUDA_HOME_FOUND="$POSSIBLE_CUDA_HOME"
-                if [ -d "$POSSIBLE_CUDA_HOME/lib64" ]; then
-                    CUDA_LIB_PATH="$POSSIBLE_CUDA_HOME/lib64"
+            echo "✅ Installed CUDA toolkit (nvcc available at: $NVCC_PATH)"
+        else
+            # Check common installation locations
+            for cuda_bin in /usr/local/cuda/bin/nvcc /usr/local/cuda-12.1/bin/nvcc /usr/local/cuda-12.0/bin/nvcc /usr/local/cuda-11.8/bin/nvcc /usr/bin/nvcc; do
+                if [ -f "$cuda_bin" ]; then
+                    NVCC_PATH="$cuda_bin"
+                    echo "✅ Found nvcc at: $NVCC_PATH"
+                    break
                 fi
-                export CUDA_HOME="$CUDA_HOME_FOUND"
-                export LD_LIBRARY_PATH="$CUDA_LIB_PATH:${LD_LIBRARY_PATH:-}"
-                echo "   Updated CUDA_HOME=$CUDA_HOME"
-            fi
+            done
         fi
     else
-        echo "⚠️  Could not install CUDA toolkit automatically"
-        echo "   FlashInfer will fail to compile kernels. Options:"
-        echo "   1. Install manually: sudo apt-get install -y nvidia-cuda-toolkit"
-        echo "   2. Use alternative backend: --attention-backend triton"
+        echo "⚠️  Could not install CUDA toolkit automatically via apt"
+        echo "   Checking for existing nvcc in common locations..."
+        # Check common installation locations even if apt install failed
+        for cuda_bin in /usr/local/cuda/bin/nvcc /usr/local/cuda-12.1/bin/nvcc /usr/local/cuda-12.0/bin/nvcc /usr/local/cuda-11.8/bin/nvcc; do
+            if [ -f "$cuda_bin" ]; then
+                NVCC_PATH="$cuda_bin"
+                echo "✅ Found nvcc at: $NVCC_PATH"
+                break
+            fi
+        done
+        
+        if [ -z "$NVCC_PATH" ]; then
+            echo "⚠️  nvcc not found. FlashInfer will fail to compile kernels."
+            echo "   Options:"
+            echo "   1. Install manually: sudo apt-get install -y nvidia-cuda-toolkit"
+            echo "   2. Download CUDA toolkit from: https://developer.nvidia.com/cuda-downloads"
+            echo "   3. Use alternative backend: --attention-backend triton"
+        fi
     fi
-else
-    echo "✅ CUDA compiler (nvcc) found: $(command -v nvcc)"
+fi
+
+# Ensure nvcc is accessible at /usr/bin/nvcc (FlashInfer hardcodes this path)
+if [ -n "$NVCC_PATH" ] && [ -f "$NVCC_PATH" ]; then
+    NVCC_BIN_DIR=$(dirname "$NVCC_PATH")
+    
+    # Add CUDA bin directory to PATH
+    export PATH="$NVCC_BIN_DIR:$PATH"
+    
+    # Create symlink if nvcc is not at /usr/bin/nvcc
+    if [ "$NVCC_PATH" != "/usr/bin/nvcc" ]; then
+        echo "   Creating symlink: /usr/bin/nvcc -> $NVCC_PATH"
+        if sudo ln -sf "$NVCC_PATH" /usr/bin/nvcc 2>/dev/null; then
+            echo "   ✅ Symlink created successfully"
+        else
+            echo "   ⚠️  Failed to create symlink (may need manual creation)"
+        fi
+    else
+        echo "   ✅ nvcc already at /usr/bin/nvcc"
+    fi
+    
+    # Verify symlink exists
+    if [ ! -f "/usr/bin/nvcc" ] && [ ! -L "/usr/bin/nvcc" ]; then
+        echo "   ⚠️  Warning: /usr/bin/nvcc still not accessible"
+    fi
+    
+    # Update CUDA_HOME_FOUND to include bin directory for PATH
+    if [ -z "$CUDA_HOME_FOUND" ]; then
+        CUDA_HOME_FOUND=$(dirname "$NVCC_BIN_DIR")
+        if [ -d "$CUDA_HOME_FOUND/lib64" ]; then
+            CUDA_LIB_PATH="$CUDA_HOME_FOUND/lib64"
+        elif [ -d "$CUDA_HOME_FOUND/lib" ]; then
+            CUDA_LIB_PATH="$CUDA_HOME_FOUND/lib"
+        fi
+    fi
 fi
 
 ##### Install Python and pip if not available #####
@@ -291,9 +343,24 @@ Environment=\"MARIMO_PORT=${MARIMO_PORT:-8080}\""
 
 # Add CUDA environment variables if CUDA was found
 if [ -n "$CUDA_HOME_FOUND" ]; then
+    # Determine CUDA bin directory
+    CUDA_BIN_DIR=""
+    if command -v nvcc &> /dev/null; then
+        NVCC_PATH=$(command -v nvcc)
+        CUDA_BIN_DIR=$(dirname "$NVCC_PATH")
+    elif [ -d "$CUDA_HOME_FOUND/bin" ]; then
+        CUDA_BIN_DIR="$CUDA_HOME_FOUND/bin"
+    fi
+    
     SERVICE_ENV="$SERVICE_ENV
 Environment=\"CUDA_HOME=$CUDA_HOME_FOUND\"
 Environment=\"LD_LIBRARY_PATH=$CUDA_LIB_PATH:\${LD_LIBRARY_PATH:-}\""
+    
+    # Add CUDA bin to PATH if found
+    if [ -n "$CUDA_BIN_DIR" ]; then
+        SERVICE_ENV="$SERVICE_ENV
+Environment=\"PATH=$CUDA_BIN_DIR:/usr/local/bin:/usr/bin:/bin:$HOME/.local/bin\""
+    fi
 fi
 
 sudo tee /etc/systemd/system/marimo.service > /dev/null << EOF
