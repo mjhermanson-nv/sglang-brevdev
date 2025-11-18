@@ -101,6 +101,9 @@ NOTEBOOKS_COPIED=0
 CUDA_HOME_FOUND=""
 CUDA_LIB_PATH=""
 
+# Wrap CUDA detection in error handling to prevent bootstrap failure
+set +e  # Don't exit on errors
+
 # Check if CUDA runtime library exists
 if ls /usr/lib/x86_64-linux-gnu/libcudart.so* 2>/dev/null | grep -q .; then
     CUDA_HOME_FOUND="/usr"
@@ -127,20 +130,22 @@ else
         fi
     done
     
-    # If still not found, try to install CUDA runtime library
+    # If still not found, try to install CUDA runtime library (non-blocking)
     if [ -z "$CUDA_HOME_FOUND" ]; then
         echo "⚠️  CUDA runtime library not found, attempting to install..."
-        sudo apt-get update -qq
-        if sudo apt-get install -y libcudart11.0 2>/dev/null; then
+        sudo apt-get update -qq 2>&1 | grep -v "WARNING: apt does not have a stable CLI interface" || true
+        if sudo apt-get install -y libcudart11.0 2>&1 | grep -v "WARNING: apt does not have a stable CLI interface" | grep -q "Setting up"; then
             CUDA_HOME_FOUND="/usr"
             CUDA_LIB_PATH="/usr/lib/x86_64-linux-gnu"
             echo "✅ Installed CUDA runtime library (libcudart11.0)"
         else
             echo "⚠️  Could not install CUDA runtime library automatically"
-            echo "   SGLang may still work with PyTorch's bundled CUDA, but sgl_kernel may fail"
+            echo "   Notebooks use Triton backend which doesn't require CUDA runtime library"
         fi
     fi
 fi
+
+set -e  # Re-enable error exit
 
 # Set CUDA environment variables if found
 if [ -n "$CUDA_HOME_FOUND" ]; then
@@ -162,23 +167,25 @@ if [ -n "$CUDA_HOME_FOUND" ]; then
     echo "   LD_LIBRARY_PATH includes $CUDA_LIB_PATH"
 fi
 
-# Check for CUDA compiler (nvcc) - needed by FlashInfer for JIT compilation
+# Check for CUDA compiler (nvcc) - optional since notebooks use Triton backend
 NVCC_PATH=""
+set +e  # Don't exit on errors
+
 if command -v nvcc &> /dev/null; then
     NVCC_PATH=$(command -v nvcc)
     echo "✅ CUDA compiler (nvcc) found: $NVCC_PATH"
 else
     echo ""
-    echo "⚠️  CUDA compiler (nvcc) not found"
-    echo "   FlashInfer requires nvcc to compile CUDA kernels at runtime"
-    echo "   Attempting to install CUDA development toolkit..."
+    echo "ℹ️  CUDA compiler (nvcc) not found"
+    echo "   Notebooks use Triton backend which doesn't require nvcc"
+    echo "   (Optional) Attempting to install CUDA development toolkit..."
     
-    # Try to install nvcc via nvidia-cuda-toolkit package
-    sudo apt-get update -qq
+    # Try to install nvcc via nvidia-cuda-toolkit package (non-blocking)
+    sudo apt-get update -qq 2>&1 | grep -v "WARNING: apt does not have a stable CLI interface" || true
     INSTALL_OUTPUT=$(sudo apt-get install -y nvidia-cuda-toolkit 2>&1)
     INSTALL_EXIT=$?
     
-    if [ $INSTALL_EXIT -eq 0 ]; then
+    if [ $INSTALL_EXIT -eq 0 ] && echo "$INSTALL_OUTPUT" | grep -q "Setting up"; then
         # Installation succeeded - refresh PATH and check again
         export PATH="/usr/local/cuda/bin:/usr/local/cuda-12.1/bin:/usr/local/cuda-12.0/bin:/usr/local/cuda-11.8/bin:$PATH"
         if command -v nvcc &> /dev/null; then
@@ -195,7 +202,7 @@ else
             done
         fi
     else
-        echo "⚠️  Could not install CUDA toolkit automatically via apt (exit code: $INSTALL_EXIT)"
+        echo "⚠️  Could not install CUDA toolkit automatically (this is optional)"
         echo "   Checking for existing nvcc in common locations..."
         
         # Check common installation locations even if apt install failed
@@ -220,15 +227,17 @@ else
         fi
         
         if [ -z "$NVCC_PATH" ]; then
-            echo "⚠️  nvcc not found. FlashInfer will fail to compile kernels."
+            echo "ℹ️  nvcc not found (not required - notebooks use Triton backend)"
             echo "   Options:"
             echo "   1. Install manually: sudo apt-get install -y nvidia-cuda-toolkit"
             echo "   2. Install via conda: conda install -c nvidia cuda-toolkit"
             echo "   3. Download CUDA toolkit from: https://developer.nvidia.com/cuda-downloads"
-            echo "   4. Use alternative backend: --attention-backend triton"
+            echo "   4. Notebooks already use Triton backend (no action needed)"
         fi
     fi
 fi
+
+set -e  # Re-enable error exit
 
 # Ensure nvcc is accessible at /usr/bin/nvcc (FlashInfer hardcodes this path)
 if [ -n "$NVCC_PATH" ] && [ -f "$NVCC_PATH" ]; then
