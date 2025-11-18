@@ -66,6 +66,55 @@ Explore SGLang's native Python APIs for advanced use cases.
 - Custom inference patterns
 - Advanced features
 
+### 7. [Structured Outputs](07_structured_outputs.py)
+Generate structured outputs with JSON schema, regex, or EBNF constraints.
+
+- JSON schema constraints
+- Regular expression patterns
+- EBNF grammar constraints
+- Grammar backend options (XGrammar, Outlines, Llguidance)
+- Guaranteed format compliance
+
+### 8. [Structured Outputs for Reasoning Models](08_structured_outputs_for_reasoning_models.py)
+Use structured outputs with reasoning models that use special reasoning tokens.
+
+- Reasoning model support (DeepSeek R1, QwQ)
+- Free-form reasoning sections
+- Grammar constraints on structured output
+- Reasoning parser configuration
+
+### 9. [LoRA Serving](09_lora.py)
+Serve models with LoRA (Low-Rank Adaptation) adapters for fine-tuned variants.
+
+- LoRA adapter loading
+- Multiple adapter support
+- Dynamic adapter switching
+- Fine-tuned model serving
+
+### 10. [Speculative Decoding](10_speculative_decoding.py)
+Accelerate inference using EAGLE-based speculative decoding.
+
+- EAGLE-2 and EAGLE-3 support
+- Throughput improvements
+- Speculative decoding setup
+- Performance optimization
+
+### 11. [Tool Parser](11_tool_parser.py)
+Implement function calling and tool usage with OpenAI-compatible APIs.
+
+- Function calling API
+- Tool definition and parsing
+- Multi-tool support
+- Tool execution workflows
+
+### 12. [Reasoning Parser](12_separate_reasoning.py)
+Parse and separate reasoning content from normal output for reasoning models.
+
+- DeepSeek R1/V3 support
+- Qwen3 reasoning models
+- Kimi model support
+- Reasoning content extraction
+
 ## 🚀 Getting Started
 
 ### Prerequisites
@@ -86,12 +135,18 @@ Explore SGLang's native Python APIs for advanced use cases.
 These notebooks are numbered to match the [SGLang documentation](https://docs.sglang.ai/basic_usage/) order:
 
 ```
-01_send_request.py              → Start here
-02_openai_api_completions.py    → OpenAI-compatible APIs
-03_openai_api_vision.py         → Vision models
-04_openai_api_embeddings.py     → Embedding models
-05_offline_engine_api.py         → Offline processing
-06_native_api.py                → Advanced native APIs
+01_send_request.py                              → Start here
+02_openai_api_completions.py                    → OpenAI-compatible APIs
+03_openai_api_vision.py                         → Vision models
+04_openai_api_embeddings.py                     → Embedding models
+05_offline_engine_api.py                        → Offline processing
+06_native_api.py                                → Advanced native APIs
+07_structured_outputs.py                        → Structured outputs
+08_structured_outputs_for_reasoning_models.py  → Structured outputs for reasoning
+09_lora.py                                      → LoRA adapter serving
+10_speculative_decoding.py                      → Speculative decoding
+11_tool_parser.py                               → Function calling / tools
+12_separate_reasoning.py                        → Reasoning parser
 ```
 
 ## 📖 What You'll Learn
@@ -110,8 +165,12 @@ These notebooks are numbered to match the [SGLang documentation](https://docs.sg
 - **Embeddings** - Vector generation for RAG and search
 
 ### Advanced Features
-- **Structured Outputs** - JSON, Regex, EBNF constraints
-- **LoRA Adapters** - Fine-tuned model adapters
+- **Structured Outputs** - JSON, Regex, EBNF constraints with grammar backends
+- **Reasoning Models** - Support for DeepSeek R1/V3, Qwen3, Kimi reasoning models
+- **LoRA Adapters** - Fine-tuned model adapters and dynamic switching
+- **Speculative Decoding** - EAGLE-2/EAGLE-3 for accelerated inference
+- **Function Calling** - Tool parser and OpenAI-compatible function calling
+- **Reasoning Parsing** - Separate reasoning content from structured output
 - **Offline Processing** - Batch inference workflows
 - **Native APIs** - Direct model access
 
