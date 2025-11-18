@@ -95,6 +95,59 @@ NOTEBOOKS_COPIED=0
 (echo "User: $USER"; echo "";)
 (echo "Home: $HOME"; echo "";)
 
+##### Detect and configure CUDA environment #####
+(echo ""; echo "##### Detecting CUDA installation #####"; echo "";)
+
+# Common CUDA installation paths
+CUDA_PATHS=(
+    "/usr/local/cuda"
+    "/usr/local/cuda-12.1"
+    "/usr/local/cuda-12.0"
+    "/usr/local/cuda-11.8"
+    "/usr/local/cuda-11.7"
+    "/opt/cuda"
+)
+
+CUDA_HOME_FOUND=""
+CUDA_LIB_PATH=""
+
+# Check each CUDA path for lib64 directory
+for cuda_path in "${CUDA_PATHS[@]}"; do
+    if [ -d "$cuda_path" ] && [ -d "$cuda_path/lib64" ]; then
+        # Verify it contains CUDA libraries
+        if ls "$cuda_path/lib64"/libcudart.so* 2>/dev/null | grep -q .; then
+            CUDA_HOME_FOUND="$cuda_path"
+            CUDA_LIB_PATH="$cuda_path/lib64"
+            echo "✅ Found CUDA installation at: $CUDA_HOME_FOUND"
+            break
+        fi
+    fi
+done
+
+# Set CUDA environment variables if found
+if [ -n "$CUDA_HOME_FOUND" ]; then
+    export CUDA_HOME="$CUDA_HOME_FOUND"
+    export LD_LIBRARY_PATH="$CUDA_LIB_PATH:${LD_LIBRARY_PATH:-}"
+    
+    # Add to shell config files for interactive use
+    if ! grep -q "CUDA_HOME" "$HOME/.bashrc" 2>/dev/null; then
+        echo "export CUDA_HOME=\"$CUDA_HOME_FOUND\"" >> "$HOME/.bashrc"
+        echo "export LD_LIBRARY_PATH=\"$CUDA_LIB_PATH:\$LD_LIBRARY_PATH\"" >> "$HOME/.bashrc"
+    fi
+    if ! grep -q "CUDA_HOME" "$HOME/.zshrc" 2>/dev/null; then
+        echo "export CUDA_HOME=\"$CUDA_HOME_FOUND\"" >> "$HOME/.zshrc"
+        echo "export LD_LIBRARY_PATH=\"$CUDA_LIB_PATH:\$LD_LIBRARY_PATH\"" >> "$HOME/.zshrc"
+    fi
+    
+    echo "✅ CUDA environment variables configured"
+    echo "   CUDA_HOME=$CUDA_HOME"
+    echo "   LD_LIBRARY_PATH includes $CUDA_LIB_PATH"
+else
+    echo "⚠️  CUDA installation not found in common locations"
+    echo "   SGLang may still work with PyTorch's bundled CUDA libraries"
+    echo "   If you encounter CUDA errors, install CUDA toolkit or set CUDA_HOME manually"
+fi
+
 ##### Install Python and pip if not available #####
 if ! command -v pip3 &> /dev/null; then
     (echo ""; echo "##### Installing Python and pip3 #####"; echo "";)
@@ -181,6 +234,19 @@ fi
 
 ##### Create systemd service for Marimo #####
 (echo ""; echo "##### Setting up Marimo systemd service #####"; echo "";)
+
+# Build environment variables for systemd service
+SERVICE_ENV="Environment=\"PATH=/usr/local/bin:/usr/bin:/bin:$HOME/.local/bin\"
+Environment=\"HOME=$HOME\"
+Environment=\"MARIMO_PORT=${MARIMO_PORT:-8080}\""
+
+# Add CUDA environment variables if CUDA was found
+if [ -n "$CUDA_HOME_FOUND" ]; then
+    SERVICE_ENV="$SERVICE_ENV
+Environment=\"CUDA_HOME=$CUDA_HOME_FOUND\"
+Environment=\"LD_LIBRARY_PATH=$CUDA_LIB_PATH:\${LD_LIBRARY_PATH:-}\""
+fi
+
 sudo tee /etc/systemd/system/marimo.service > /dev/null << EOF
 [Unit]
 Description=Marimo Notebook Server
@@ -190,9 +256,7 @@ After=network.target
 Type=simple
 User=$USER
 WorkingDirectory=$HOME/$NOTEBOOKS_DIR
-Environment="PATH=/usr/local/bin:/usr/bin:/bin:$HOME/.local/bin"
-Environment="HOME=$HOME"
-Environment="MARIMO_PORT=${MARIMO_PORT:-8080}"
+$SERVICE_ENV
 ExecStart=$HOME/.local/bin/marimo edit --host 0.0.0.0 --port \${MARIMO_PORT} --headless --no-token
 Restart=always
 RestartSec=10
@@ -213,7 +277,8 @@ fi
 (echo ""; echo "##### Enabling and starting Marimo service #####"; echo "";)
 sudo systemctl daemon-reload
 sudo systemctl enable marimo.service 2>/dev/null || true
-sudo systemctl start marimo.service
+# Use restart to ensure service picks up new environment variables (including CUDA vars)
+sudo systemctl restart marimo.service 2>/dev/null || sudo systemctl start marimo.service
 
 # Wait for service to start
 sleep 2
