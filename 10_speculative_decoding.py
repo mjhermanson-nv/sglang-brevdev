@@ -143,7 +143,7 @@ def _(launch_server_cmd, wait_for_server):
         """
     python3 -m sglang.launch_server --model meta-llama/Llama-2-7b-chat-hf  --speculative-algorithm EAGLE \
         --speculative-draft-model-path lmsys/sglang-EAGLE-llama2-chat-7B --speculative-num-steps 3 \
-        --speculative-eagle-topk 4 --speculative-num-draft-tokens 16 --cuda-graph-max-bs 8 --log-level warning
+        --speculative-eagle-topk 4 --speculative-num-draft-tokens 16 --cuda-graph-max-bs 8 --attention-backend triton --log-level warning
     """
     )
 
@@ -177,7 +177,7 @@ def _(mo):
 
 @app.cell
 def _(launch_server_cmd, wait_for_server):
-    (server_process_1, port_1) = launch_server_cmd('\npython3 -m sglang.launch_server --model meta-llama/Llama-2-7b-chat-hf  --speculative-algorithm EAGLE     --speculative-draft-model-path lmsys/sglang-EAGLE-llama2-chat-7B --speculative-num-steps 5         --speculative-eagle-topk 8 --speculative-num-draft-tokens 64 --mem-fraction 0.6             --enable-torch-compile --torch-compile-max-bs 2 --log-level warning\n')
+    (server_process_1, port_1) = launch_server_cmd('\npython3 -m sglang.launch_server --model meta-llama/Llama-2-7b-chat-hf  --speculative-algorithm EAGLE     --speculative-draft-model-path lmsys/sglang-EAGLE-llama2-chat-7B --speculative-num-steps 5         --speculative-eagle-topk 8 --speculative-num-draft-tokens 64 --mem-fraction 0.6             --enable-torch-compile --torch-compile-max-bs 2 --attention-backend triton --log-level warning\n')
     wait_for_server(f'http://localhost:{port_1}')
     return port_1, server_process_1
 
@@ -212,7 +212,7 @@ def _(mo):
 
 @app.cell
 def _(launch_server_cmd, wait_for_server):
-    (server_process_2, port_2) = launch_server_cmd('\npython3 -m sglang.launch_server --model meta-llama/Meta-Llama-3-8B-Instruct --speculative-algorithm EAGLE     --speculative-draft-model-path lmsys/sglang-EAGLE-LLaMA3-Instruct-8B --speculative-num-steps 5     --speculative-eagle-topk 8 --speculative-num-draft-tokens 64 --speculative-token-map thunlp/LLaMA3-Instruct-8B-FR-Spec/freq_32768.pt     --mem-fraction 0.7 --cuda-graph-max-bs 2 --dtype float16  --log-level warning\n')
+    (server_process_2, port_2) = launch_server_cmd('\npython3 -m sglang.launch_server --model meta-llama/Meta-Llama-3-8B-Instruct --speculative-algorithm EAGLE     --speculative-draft-model-path lmsys/sglang-EAGLE-LLaMA3-Instruct-8B --speculative-num-steps 5     --speculative-eagle-topk 8 --speculative-num-draft-tokens 64 --speculative-token-map thunlp/LLaMA3-Instruct-8B-FR-Spec/freq_32768.pt     --mem-fraction 0.7 --cuda-graph-max-bs 2 --dtype float16 --attention-backend triton  --log-level warning\n')
     wait_for_server(f'http://localhost:{port_2}')
     return port_2, server_process_2
 
@@ -243,7 +243,7 @@ def _(mo):
 
 @app.cell
 def _(launch_server_cmd, wait_for_server):
-    (server_process_3, port_3) = launch_server_cmd('\npython3 -m sglang.launch_server --model meta-llama/Llama-3.1-8B-Instruct  --speculative-algorithm EAGLE3     --speculative-draft-model-path jamesliu1/sglang-EAGLE3-Llama-3.1-Instruct-8B --speculative-num-steps 5         --speculative-eagle-topk 8 --speculative-num-draft-tokens 32 --mem-fraction 0.6         --cuda-graph-max-bs 2 --dtype float16 --log-level warning\n')
+    (server_process_3, port_3) = launch_server_cmd('\npython3 -m sglang.launch_server --model meta-llama/Llama-3.1-8B-Instruct  --speculative-algorithm EAGLE3     --speculative-draft-model-path jamesliu1/sglang-EAGLE3-Llama-3.1-Instruct-8B --speculative-num-steps 5         --speculative-eagle-topk 8 --speculative-num-draft-tokens 32 --mem-fraction 0.6         --cuda-graph-max-bs 2 --dtype float16 --attention-backend triton --log-level warning\n')
     wait_for_server(f'http://localhost:{port_3}')
     return port_3, server_process_3
 
@@ -279,7 +279,7 @@ def _(mo):
 
 @app.cell
 def _(launch_server_cmd, wait_for_server):
-    (server_process_4, port_4) = launch_server_cmd('\n    python3 -m sglang.launch_server --model-path XiaomiMiMo/MiMo-7B-RL --host 0.0.0.0 --trust-remote-code     --speculative-algorithm EAGLE --speculative-num-steps 1 --speculative-eagle-topk 1 --speculative-num-draft-tokens 2     --mem-fraction 0.5 --log-level warning\n')
+    (server_process_4, port_4) = launch_server_cmd('\n    python3 -m sglang.launch_server --model-path XiaomiMiMo/MiMo-7B-RL --host 0.0.0.0 --trust-remote-code     --speculative-algorithm EAGLE --speculative-num-steps 1 --speculative-eagle-topk 1 --speculative-num-draft-tokens 2     --mem-fraction 0.5 --attention-backend triton --log-level warning\n')
     wait_for_server(f'http://localhost:{port_4}')
     return port_4, server_process_4
 

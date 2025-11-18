@@ -35,7 +35,7 @@ def _():
     embedding_process, port = launch_server_cmd(
         """
     python3 -m sglang.launch_server --model-path Alibaba-NLP/gte-Qwen2-1.5B-instruct \
-        --host 0.0.0.0 --is-embedding --log-level warning
+        --host 0.0.0.0 --is-embedding --attention-backend triton --log-level warning
     """
     )
 

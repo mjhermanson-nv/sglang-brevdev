@@ -121,7 +121,7 @@ def _():
     from openai import OpenAI
 
     server_process, port = launch_server_cmd(
-        "python3 -m sglang.launch_server --model-path Qwen/Qwen2.5-7B-Instruct --tool-call-parser qwen25 --host 0.0.0.0 --log-level warning"  # qwen25
+        "python3 -m sglang.launch_server --model-path Qwen/Qwen2.5-7B-Instruct --tool-call-parser qwen25 --host 0.0.0.0 --attention-backend triton --log-level warning"  # qwen25
     )
     wait_for_server(f"http://localhost:{port}")
     return (
@@ -505,7 +505,7 @@ def _(mo):
 
 @app.cell
 def _(OpenAI, launch_server_cmd, print_highlight, wait_for_server):
-    (server_process_tool_choice, port_tool_choice) = launch_server_cmd('python3 -m sglang.launch_server --model-path Qwen/Qwen2.5-7B-Instruct --tool-call-parser qwen25 --host 0.0.0.0  --log-level warning')
+    (server_process_tool_choice, port_tool_choice) = launch_server_cmd('python3 -m sglang.launch_server --model-path Qwen/Qwen2.5-7B-Instruct --tool-call-parser qwen25 --host 0.0.0.0 --attention-backend triton  --log-level warning')
     wait_for_server(f'http://localhost:{port_tool_choice}')
     client_tool_choice = OpenAI(api_key='None', base_url=f'http://0.0.0.0:{port_tool_choice}/v1')
     model_name_tool_choice = client_tool_choice.models.list().data[0].id
@@ -591,7 +591,7 @@ def _(mo):
 @app.cell
 def _(launch_server_cmd, print_highlight, terminate_process, wait_for_server):
     import openai
-    (server_process_1, port_1) = launch_server_cmd(' python3 -m sglang.launch_server --model-path meta-llama/Llama-3.2-1B-Instruct --tool-call-parser pythonic --tp 1  --log-level warning')
+    (server_process_1, port_1) = launch_server_cmd(' python3 -m sglang.launch_server --model-path meta-llama/Llama-3.2-1B-Instruct --tool-call-parser pythonic --tp 1 --attention-backend triton  --log-level warning')
     wait_for_server(f'http://localhost:{port_1}')
     tools_3 = [{'type': 'function', 'function': {'name': 'get_weather', 'description': 'Get the current weather for a given location.', 'parameters': {'type': 'object', 'properties': {'location': {'type': 'string', 'description': 'The name of the city or location.'}}, 'required': ['location']}}}, {'type': 'function', 'function': {'name': 'get_tourist_attractions', 'description': 'Get a list of top tourist attractions for a given city.', 'parameters': {'type': 'object', 'properties': {'city': {'type': 'string', 'description': 'The name of the city to find attractions for.'}}, 'required': ['city']}}}]
 

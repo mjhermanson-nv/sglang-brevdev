@@ -47,7 +47,7 @@ def _():
     from sglang.utils import wait_for_server, print_highlight, terminate_process
 
     server_process, port = launch_server_cmd(
-        "python3 -m sglang.launch_server --model-path qwen/qwen2.5-0.5b-instruct --host 0.0.0.0 --log-level warning"
+        "python3 -m sglang.launch_server --model-path qwen/qwen2.5-0.5b-instruct --host 0.0.0.0 --attention-backend triton --log-level warning"
     )
 
     wait_for_server(f"http://localhost:{port}")
@@ -233,7 +233,7 @@ def _(mo):
 
 @app.cell
 def _(launch_server_cmd, wait_for_server):
-    (embedding_process, port_1) = launch_server_cmd('\npython3 -m sglang.launch_server --model-path Alibaba-NLP/gte-Qwen2-1.5B-instruct     --host 0.0.0.0 --is-embedding --log-level warning\n')
+    (embedding_process, port_1) = launch_server_cmd('\npython3 -m sglang.launch_server --model-path Alibaba-NLP/gte-Qwen2-1.5B-instruct     --host 0.0.0.0 --is-embedding --attention-backend triton --log-level warning\n')
     wait_for_server(f'http://localhost:{port_1}')
     return embedding_process, port_1
 
@@ -301,7 +301,7 @@ def _(mo):
 def _(launch_server_cmd, wait_for_server):
     # Note that SGLang now treats embedding models and reward models as the same type of models.
     # This will be updated in the future.
-    (reward_process, port_3) = launch_server_cmd('\npython3 -m sglang.launch_server --model-path Skywork/Skywork-Reward-Llama-3.1-8B-v0.2 --host 0.0.0.0 --is-embedding --log-level warning\n')
+    (reward_process, port_3) = launch_server_cmd('\npython3 -m sglang.launch_server --model-path Skywork/Skywork-Reward-Llama-3.1-8B-v0.2 --host 0.0.0.0 --is-embedding --attention-backend triton --log-level warning\n')
     wait_for_server(f'http://localhost:{port_3}')
     return port_3, reward_process
 
@@ -343,7 +343,7 @@ def _(mo):
 
 @app.cell
 def _(launch_server_cmd, wait_for_server):
-    (expert_record_server_process, port_4) = launch_server_cmd('python3 -m sglang.launch_server --model-path Qwen/Qwen1.5-MoE-A2.7B --host 0.0.0.0 --expert-distribution-recorder-mode stat --log-level warning')
+    (expert_record_server_process, port_4) = launch_server_cmd('python3 -m sglang.launch_server --model-path Qwen/Qwen1.5-MoE-A2.7B --host 0.0.0.0 --expert-distribution-recorder-mode stat --attention-backend triton --log-level warning')
     wait_for_server(f'http://localhost:{port_4}')
     return expert_record_server_process, port_4
 
@@ -381,7 +381,7 @@ def _(mo):
 
 @app.cell
 def _(launch_server_cmd, wait_for_server):
-    (tokenizer_free_server_process, port_5) = launch_server_cmd('\npython3 -m sglang.launch_server --model-path qwen/qwen2.5-0.5b-instruct\n')
+    (tokenizer_free_server_process, port_5) = launch_server_cmd('\npython3 -m sglang.launch_server --model-path qwen/qwen2.5-0.5b-instruct --attention-backend triton\n')
     wait_for_server(f'http://localhost:{port_5}')
     return port_5, tokenizer_free_server_process
 

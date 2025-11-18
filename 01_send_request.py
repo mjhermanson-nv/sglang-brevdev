@@ -36,7 +36,7 @@ def _():
     server_process, port = launch_server_cmd(
         """
     python3 -m sglang.launch_server --model-path qwen/qwen2.5-0.5b-instruct \
-     --host 0.0.0.0 --log-level warning
+     --host 0.0.0.0 --attention-backend triton --log-level warning
     """
     )
 

@@ -54,7 +54,7 @@ def _():
 
 
     server_process, port = launch_server_cmd(
-        "python -m sglang.launch_server --model-path meta-llama/Meta-Llama-3.1-8B-Instruct --host 0.0.0.0 --log-level warning"
+        "python -m sglang.launch_server --model-path meta-llama/Meta-Llama-3.1-8B-Instruct --host 0.0.0.0 --attention-backend triton --log-level warning"
     )
 
     wait_for_server(f"http://localhost:{port}")

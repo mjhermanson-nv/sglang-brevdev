@@ -49,7 +49,7 @@ def _():
 
 
     server_process, port = launch_server_cmd(
-        "python -m sglang.launch_server --model-path deepseek-ai/DeepSeek-R1-Distill-Qwen-7B --host 0.0.0.0 --reasoning-parser deepseek-r1 --log-level warning"
+        "python -m sglang.launch_server --model-path deepseek-ai/DeepSeek-R1-Distill-Qwen-7B --host 0.0.0.0 --reasoning-parser deepseek-r1 --attention-backend triton --log-level warning"
     )
 
     wait_for_server(f"http://localhost:{port}")

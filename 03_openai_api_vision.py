@@ -37,7 +37,7 @@ def _():
 
     vision_process, port = launch_server_cmd(
         """
-    python3 -m sglang.launch_server --model-path Qwen/Qwen2.5-VL-7B-Instruct --log-level warning
+    python3 -m sglang.launch_server --model-path Qwen/Qwen2.5-VL-7B-Instruct --attention-backend triton --log-level warning
     """
     )
 

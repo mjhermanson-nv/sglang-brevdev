@@ -157,6 +157,7 @@ def _(launch_server_cmd, wait_for_server):
         --enable-lora \
         --lora-paths lora0=algoprog/fact-generation-llama-3.1-8b-instruct-lora \
         --max-loras-per-batch 1 \
+        --attention-backend triton \
         --log-level warning \
     """
     )
@@ -191,7 +192,7 @@ def _(mo):
 
 @app.cell
 def _(launch_server_cmd, wait_for_server):
-    (server_process_1, port_1) = launch_server_cmd('\npython3 -m sglang.launch_server --model-path meta-llama/Meta-Llama-3.1-8B-Instruct     --enable-lora     --lora-paths lora0=algoprog/fact-generation-llama-3.1-8b-instruct-lora     lora1=Nutanix/Meta-Llama-3.1-8B-Instruct_lora_4_alpha_16     --max-loras-per-batch 2     --log-level warning ')
+    (server_process_1, port_1) = launch_server_cmd('\npython3 -m sglang.launch_server --model-path meta-llama/Meta-Llama-3.1-8B-Instruct     --enable-lora     --lora-paths lora0=algoprog/fact-generation-llama-3.1-8b-instruct-lora     lora1=Nutanix/Meta-Llama-3.1-8B-Instruct_lora_4_alpha_16     --max-loras-per-batch 2     --attention-backend triton     --log-level warning ')
     wait_for_server(f'http://localhost:{port_1}')
     return port_1, server_process_1
 
@@ -235,7 +236,7 @@ def _(launch_server_cmd, wait_for_server):
     lora0 = 'Nutanix/Meta-Llama-3.1-8B-Instruct_lora_4_alpha_16'  # rank - 4, target modules - q_proj, k_proj, v_proj, o_proj, gate_proj
     lora1 = 'algoprog/fact-generation-llama-3.1-8b-instruct-lora'  # rank - 64, target modules - q_proj, k_proj, v_proj, o_proj, gate_proj, up_proj, down_proj
     lora0_new = 'philschmid/code-llama-3-1-8b-text-to-sql-lora'  # rank - 256, target modules - q_proj, k_proj, v_proj, o_proj, gate_proj, up_proj, down_proj
-    (server_process_2, port_2) = launch_server_cmd('\n    python3 -m sglang.launch_server --model-path meta-llama/Meta-Llama-3.1-8B-Instruct     --enable-lora     --cuda-graph-max-bs 2     --max-loras-per-batch 2     --max-lora-rank 256\n    --lora-target-modules all\n    --log-level warning\n    ')
+    (server_process_2, port_2) = launch_server_cmd('\n    python3 -m sglang.launch_server --model-path meta-llama/Meta-Llama-3.1-8B-Instruct     --enable-lora     --cuda-graph-max-bs 2     --max-loras-per-batch 2     --max-lora-rank 256\n    --lora-target-modules all\n    --attention-backend triton\n    --log-level warning\n    ')
     url_2 = f'http://127.0.0.1:{port_2}'
     # The `--target-lora-modules` param below is technically not needed, as the server will infer it from lora0 which already has all the target modules specified.
     # We are adding it here just to demonstrate usage.
@@ -372,7 +373,7 @@ def _(mo):
 
 @app.cell
 def _(launch_server_cmd, wait_for_server):
-    (server_process_3, port_3) = launch_server_cmd('\n    python3 -m sglang.launch_server --model-path meta-llama/Meta-Llama-3.1-8B-Instruct     --enable-lora     --cuda-graph-max-bs 8     --max-loras-per-batch 3     --max-lora-rank 256     --lora-target-modules all     --lora-paths         {"lora_name":"lora0","lora_path":"Nutanix/Meta-Llama-3.1-8B-Instruct_lora_4_alpha_16","pinned":true}         {"lora_name":"lora1","lora_path":"algoprog/fact-generation-llama-3.1-8b-instruct-lora"}         lora2=philschmid/code-llama-3-1-8b-text-to-sql-lora\n    --log-level warning\n    ')
+    (server_process_3, port_3) = launch_server_cmd('\n    python3 -m sglang.launch_server --model-path meta-llama/Meta-Llama-3.1-8B-Instruct     --enable-lora     --cuda-graph-max-bs 8     --max-loras-per-batch 3     --max-lora-rank 256     --lora-target-modules all     --lora-paths         {"lora_name":"lora0","lora_path":"Nutanix/Meta-Llama-3.1-8B-Instruct_lora_4_alpha_16","pinned":true}         {"lora_name":"lora1","lora_path":"algoprog/fact-generation-llama-3.1-8b-instruct-lora"}         lora2=philschmid/code-llama-3-1-8b-text-to-sql-lora\n    --attention-backend triton\n    --log-level warning\n    ')
     url_5 = f'http://127.0.0.1:{port_3}'
     wait_for_server(url_5)
     return port_3, server_process_3, url_5
@@ -436,7 +437,7 @@ def _(mo):
 
 @app.cell
 def _(launch_server_cmd):
-    (server_process_4, port_4) = launch_server_cmd('\n    python3 -m sglang.launch_server     --model-path meta-llama/Meta-Llama-3.1-8B-Instruct     --enable-lora     --lora-backend csgmv     --max-loras-per-batch 16     --lora-paths lora1=path/to/lora1 lora2=path/to/lora2\n    ')
+    (server_process_4, port_4) = launch_server_cmd('\n    python3 -m sglang.launch_server     --model-path meta-llama/Meta-Llama-3.1-8B-Instruct     --enable-lora     --lora-backend csgmv     --max-loras-per-batch 16     --lora-paths lora1=path/to/lora1 lora2=path/to/lora2     --attention-backend triton\n    ')
     return (server_process_4,)
 
 
