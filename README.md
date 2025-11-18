@@ -1,5 +1,7 @@
 # SGLang Notebooks for Marimo
 
+[![ Click here to deploy.](https://brev-assets.s3.us-west-1.amazonaws.com/nv-lb-dark.svg)](https://brev.nvidia.com/launchable/deploy?launchableID=env-35Ob8Jbi077TirDLjC2Yfqo72uh)
+
 Interactive SGLang tutorials converted to **Marimo** notebooks. Learn how to use SGLang for high-performance LLM serving with these step-by-step guides.
 
 ## What is SGLang?
