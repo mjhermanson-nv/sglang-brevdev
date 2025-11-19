@@ -429,11 +429,5 @@ def _(terminate_process, tokenizer_free_server_process):
     return
 
 
-@app.cell
-def _():
-    import marimo as mo
-    return (mo,)
-
-
 if __name__ == "__main__":
     app.run()
