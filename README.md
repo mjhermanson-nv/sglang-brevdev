@@ -13,6 +13,21 @@ Interactive SGLang tutorials converted to **Marimo** notebooks. Learn how to use
 - 🎯 **Flexible** - Support for chat completions, vision models, embeddings, and more
 - ⚡ **Efficient** - Advanced batching, continuous batching, and memory management
 
+## Why SGLang + NVIDIA Technologies?
+
+SGLang combined with NVIDIA's GPU computing platform creates a powerful solution for LLM serving that delivers unmatched performance and scalability:
+
+### 🎯 **Hardware-Optimized Performance**
+- **NVIDIA GPU Acceleration**: Leverages CUDA cores and Tensor Cores across NVIDIA's GPU lineup (A100, H100, L40S, A10, L4) for maximum throughput
+- **FlashInfer Backend**: Optimized attention kernels specifically tuned for NVIDIA GPUs (sm75+), delivering 29-69% lower latency and 2-3x faster inference compared to generic implementations. FlashInfer is SGLang's default backend for production deployments, but requires CUDA compiler (nvcc) for JIT compilation
+- **Triton Backend**: All notebooks use NVIDIA's Triton compiler backend for reliable, portable inference that doesn't require CUDA toolkit installation. While Triton may have slightly lower peak performance than FlashInfer, it provides excellent performance and is ideal for development and environments where FlashInfer installation is challenging
+- **Memory Efficiency**: PagedAttention and RadixAttention algorithms maximize GPU memory utilization, enabling larger models and higher batch sizes on NVIDIA hardware
+
+### ⚡ **Enterprise-Grade Scalability**
+- **Multi-GPU Support**: Seamlessly scales across multiple NVIDIA GPUs for handling high-throughput production workloads
+- **Continuous Batching**: Dynamic request batching optimized for NVIDIA's parallel processing architecture, maximizing GPU utilization
+- **Low Latency**: CUDA-accelerated inference pipelines minimize latency for real-time applications
+
 ## 📚 Notebook Tutorials
 
 Follow these notebooks in order to learn SGLang from basics to advanced usage:
@@ -181,15 +196,20 @@ These notebooks are numbered to match the [SGLang documentation](https://docs.sg
 Each notebook demonstrates launching an SGLang server. Common options include:
 
 ```python
-# Basic server launch
+# Basic server launch (uses default backend - FlashInfer if available, falls back to Triton)
 python -m sglang.launch_server \
     --model-path <model-name> \
     --port <port-number>
 
-# With FlashInfer backend (recommended for sm75+ GPUs)
+# With FlashInfer backend (recommended for production on sm75+ GPUs with CUDA toolkit)
 python -m sglang.launch_server \
     --model-path <model-name> \
     --attention-backend flashinfer
+
+# With Triton backend (used in all notebooks - reliable, no CUDA toolkit required)
+python -m sglang.launch_server \
+    --model-path <model-name> \
+    --attention-backend triton
 
 # With LoRA adapters
 python -m sglang.launch_server \
@@ -197,6 +217,8 @@ python -m sglang.launch_server \
     --enable-lora \
     --lora-paths adapter_a=/path/to/adapter
 ```
+
+**Note**: All notebooks use `--attention-backend triton` for reliability and portability. For production deployments with CUDA toolkit installed, consider using `--attention-backend flashinfer` for optimal performance.
 
 ### Model Selection
 
@@ -225,7 +247,9 @@ SGLang supports many models. Examples in notebooks use:
 - Verify Python version (3.10+)
 
 ### Performance Issues
-- Use FlashInfer backend for sm75+ GPUs (T4, A10, A100, L4, L40S, H100)
+- **Backend Selection**: 
+  - Use FlashInfer backend (`--attention-backend flashinfer`) for production on sm75+ GPUs (T4, A10, A100, L4, L40S, H100) when CUDA toolkit is available - delivers 29-69% lower latency
+  - Use Triton backend (`--attention-backend triton`) for development or when FlashInfer installation fails - provides excellent performance without requiring nvcc
 - Adjust batch size based on GPU memory
 - Check GPU utilization: `nvidia-smi`
 
