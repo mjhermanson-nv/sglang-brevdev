@@ -253,6 +253,17 @@ SGLang supports many models. Examples in notebooks use:
 - Adjust batch size based on GPU memory
 - Check GPU utilization: `nvidia-smi`
 
+### Out of Memory (OOM) Errors
+If you encounter CUDA out of memory errors when launching servers or engines:
+- **Kill old SGLang processes**: Stale SGLang scheduler processes may be holding GPU memory. Free up memory by running:
+  ```bash
+  pkill -f "sglang::scheduler"
+  ```
+- **Check GPU memory**: Verify available memory with `nvidia-smi`
+- **Use smaller models**: If memory is limited, try smaller models (e.g., `Qwen/Qwen2.5-0.5B-Instruct` instead of 8B models)
+- **Reduce batch size**: Lower `--max-running-requests` or `--max-total-tokens` in server launch commands
+- **Disable CUDA graph**: Add `--disable-cuda-graph` to server launch commands to reduce memory usage (may slightly impact performance)
+
 ## 📝 Notes
 
 - These notebooks are converted from the official [SGLang documentation](https://docs.sglang.ai)
