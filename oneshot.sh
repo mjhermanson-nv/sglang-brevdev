@@ -308,15 +308,22 @@ fi
 # Install latest PyTorch from CUDA 12.1 index (torch-tensorrt compatibility handled separately)
 pip3 install --no-cache-dir torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
 
+# Fix PyTorch 2.9.1 + CuDNN compatibility issue
+# PyTorch 2.9.1 has a known bug with CuDNN < 9.15 that causes performance degradation
+# Upgrade CuDNN to 9.16.0.29 to resolve this issue (required for SGLang)
+(echo ""; echo "##### Fixing PyTorch 2.9.1 + CuDNN compatibility #####"; echo "";)
+pip3 install --no-cache-dir nvidia-cudnn-cu12==9.16.0.29 2>&1 | grep -v -E "ERROR: pip's dependency resolver" || true
+
 # Install common packages for marimo examples
 (echo ""; echo "##### Installing common packages for marimo examples #####"; echo "";)
 # Note: openai pinned to 2.6.1 for sglang compatibility, jsonschema>=4.0.0 for sglang
+# Note: nvidia-ml-py replaces deprecated pynvml package
 pip3 install --no-cache-dir --upgrade \
     polars altair plotly pandas numpy scipy scikit-learn \
     matplotlib seaborn pyarrow "openai==2.6.1" anthropic requests \
     beautifulsoup4 pillow 'marimo[sql]' duckdb sqlalchemy \
     instructor mohtml openai-whisper opencv-python python-dotenv \
-    wigglystuff yt-dlp psutil pynvml GPUtil \
+    wigglystuff yt-dlp psutil pynvml GPUtil nvidia-ml-py \
     transformers networkx diffusers accelerate safetensors \
     "jsonschema>=4.0.0"
 
