@@ -1,6 +1,6 @@
 import marimo
 
-__generated_with = "0.17.7"
+__generated_with = "0.18.2"
 app = marimo.App()
 
 
@@ -49,18 +49,126 @@ def _(mo):
 
 
 @app.cell
-def _():
-    import openai
+def _(mo):
+    mo.md(r"""
+    ## Hugging Face Authentication
+
+    Some models require a Hugging Face token for access. Please enter your token below.
+    """)
+    return
+
+
+@app.cell
+def _(mo):
     import os
+    import getpass
+
+    # Prompt for Hugging Face token via stdin
+    # Check if token is already set in environment
+    existing_token = os.environ.get("HUGGING_FACE_HUB_TOKEN") or os.environ.get("HF_TOKEN")
+
+    if existing_token:
+        mo.md(f"✅ Hugging Face token found in environment (length: {len(existing_token)})")
+        mo.md("**To change it, run the next cell.**")
+        hf_token = existing_token
+    else:
+        mo.md("**Please enter your Hugging Face token:**")
+        mo.md("(Token format: starts with 'hf_' and is typically 40-50 characters)")
+        # Use getpass for secure input (hides the token as you type)
+        try:
+            hf_token = getpass.getpass("Hugging Face Token: ")
+            if hf_token and hf_token.strip():
+                hf_token = hf_token.strip()
+                # Validate token
+                if len(hf_token) > 100:
+                    mo.md(f"⚠️ **Warning:** Token appears too long ({len(hf_token)} chars). Please verify.")
+                else:
+                    try:
+                        hf_token.encode('ascii')
+                        os.environ["HUGGING_FACE_HUB_TOKEN"] = hf_token
+                        os.environ["HF_TOKEN"] = hf_token
+                        mo.md(f"✅ **Token saved!** (length: {len(hf_token)})")
+                    except UnicodeEncodeError:
+                        mo.md("⚠️ **Error:** Token contains invalid characters.")
+                        hf_token = None
+            else:
+                mo.md("⚠️ No token entered. Model access may fail if it's gated.")
+                hf_token = None
+        except Exception as e:
+            mo.md(f"⚠️ **Error reading token:** {e}")
+            hf_token = None
+
+    return hf_token, os
+
+
+@app.cell
+def _(hf_token, os):
+    import openai
+    import subprocess
 
     from sglang.test.doc_patch import launch_server_cmd
     from sglang.utils import wait_for_server, print_highlight, terminate_process
 
     os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
+    # Use token from stdin prompt or environment
+    token_value = hf_token or os.environ.get("HUGGING_FACE_HUB_TOKEN") or os.environ.get("HF_TOKEN")
 
+    if token_value and token_value.strip():
+        token_value = token_value.strip()
+        # Ensure environment variables are set (must be set before subprocess is created)
+        os.environ["HUGGING_FACE_HUB_TOKEN"] = token_value
+        os.environ["HF_TOKEN"] = token_value
+        print(f"✅ Using Hugging Face token (length: {len(token_value)})")
+
+        # Also try to authenticate with huggingface-cli if available
+        # This ensures the token is cached for the subprocess
+        try:
+            result = subprocess.run(
+                ["huggingface-cli", "login", "--token", token_value, "--add-to-git-credential"],
+                input="",
+                capture_output=True,
+                text=True,
+                check=False,
+                timeout=10,
+                env=os.environ.copy()  # Ensure environment is passed
+            )
+            if result.returncode == 0:
+                print("✅ Authenticated with huggingface-cli")
+        except FileNotFoundError:
+            print("ℹ️  huggingface-cli not found, using environment variables only")
+        except subprocess.TimeoutExpired:
+            print("⚠️  huggingface-cli login timed out, using environment variables")
+        except Exception as e:
+            print(f"⚠️  Could not login via huggingface-cli: {e}")
+            print("   Using environment variables instead.")
+    else:
+        print("⚠️  No Hugging Face token provided. Model access may fail if it's gated.")
+
+    # Use a smaller model to avoid GPU memory issues
+    # Meta-Llama-3.1-8B-Instruct requires ~16GB GPU memory
+    # If you need the 8B model, make sure to free GPU memory first
+    model_path = "meta-llama/Meta-Llama-3.1-8B-Instruct"
+    
+    # Check GPU memory and warn if needed
+    try:
+        result = subprocess.run(["nvidia-smi", "--query-gpu=memory.free", "--format=csv,noheader,nounits"], 
+                               capture_output=True, text=True, timeout=5)
+        if result.returncode == 0:
+            free_memory_gb = int(result.stdout.strip().split('\n')[0]) / 1024
+            if free_memory_gb < 20:
+                print(f"⚠️  WARNING: Only {free_memory_gb:.1f} GB GPU memory free.")
+                print("   The 8B model requires ~16GB. Consider:")
+                print("   1. Killing old SGLang processes: pkill -f 'sglang::scheduler'")
+                print("   2. Using a smaller model")
+    except Exception:
+        pass  # Ignore if nvidia-smi fails
+
+    # Use triton backend to avoid nvcc compilation issues
+    # FlashInfer requires nvcc (CUDA compiler) which may not be available
+    # Also disable CUDA graph to avoid FlashInfer compilation during graph capture
     server_process, port = launch_server_cmd(
-        "python -m sglang.launch_server --model-path meta-llama/Meta-Llama-3.1-8B-Instruct --host 0.0.0.0 --attention-backend triton --log-level warning"
+        f"python3 -m sglang.launch_server --model-path {model_path} --host 0.0.0.0 --attention-backend triton --sampling-backend pytorch --disable-cuda-graph --log-level warning"
     )
 
     wait_for_server(f"http://localhost:{port}")
@@ -342,9 +450,18 @@ def _(mo):
 @app.cell
 def _():
     import sglang as sgl
+    import nest_asyncio
 
+    nest_asyncio.apply()
+
+    # Initialize engine with triton backend to avoid nvcc compilation issues
+    # FlashInfer requires nvcc (CUDA compiler) which may not be available
+    # Also disable CUDA graph to avoid FlashInfer compilation during graph capture
     llm = sgl.Engine(
-        model_path="meta-llama/Meta-Llama-3.1-8B-Instruct", grammar_backend="xgrammar"
+        model_path="meta-llama/Meta-Llama-3.1-8B-Instruct",
+        grammar_backend="xgrammar",
+        attention_backend="triton",
+        disable_cuda_graph=True
     )
     return (llm,)
 

@@ -62,9 +62,41 @@ def _(mo):
 
 
 @app.cell
-def _(port, print_highlight):
+def _(mo):
+    example_image_url = "https://raw.githubusercontent.com/sgl-project/sglang/main/examples/assets/example_image.png"
+    mo.md(f"**Example image used in the requests below:**")
+    mo.image(example_image_url)
+    return (example_image_url,)
+
+
+@app.cell
+def _(port, print_highlight, example_image_url):
     import subprocess
-    curl_command = f"""\ncurl -s http://localhost:{port}/v1/chat/completions \\\n  -H "Content-Type: application/json" \\\n  -d '{{\n    "model": "Qwen/Qwen2.5-VL-7B-Instruct",\n    "messages": [\n      {{\n        "role": "user",\n        "content": [\n          {{\n            "type": "text",\n            "text": "What’s in this image?"\n          }},\n          {{\n            "type": "image_url",\n            "image_url": {{\n              "url": "https://github.com/sgl-project/sglang/blob/main/test/lang/example_image.png?raw=true"\n            }}\n          }}\n        ]\n      }}\n    ],\n    "max_tokens": 300\n  }}'\n"""
+    import json
+    import shlex
+    curl_data = {
+        "model": "Qwen/Qwen2.5-VL-7B-Instruct",
+        "messages": [
+            {
+                "role": "user",
+                "content": [
+                    {
+                        "type": "text",
+                        "text": "What's in this image?"
+                    },
+                    {
+                        "type": "image_url",
+                        "image_url": {
+                            "url": example_image_url
+                        }
+                    }
+                ]
+            }
+        ],
+        "max_tokens": 300
+    }
+    json_data = json.dumps(curl_data)
+    curl_command = f'curl -s http://localhost:{port}/v1/chat/completions -H "Content-Type: application/json" -d {shlex.quote(json_data)}'
     _response = subprocess.check_output(curl_command, shell=True).decode()
     print_highlight(_response)
     _response = subprocess.check_output(curl_command, shell=True).decode()
@@ -81,10 +113,10 @@ def _(mo):
 
 
 @app.cell
-def _(port, print_highlight):
+def _(port, print_highlight, example_image_url):
     import requests
     url = f'http://localhost:{port}/v1/chat/completions'
-    data = {'model': 'Qwen/Qwen2.5-VL-7B-Instruct', 'messages': [{'role': 'user', 'content': [{'type': 'text', 'text': 'What’s in this image?'}, {'type': 'image_url', 'image_url': {'url': 'https://github.com/sgl-project/sglang/blob/main/test/lang/example_image.png?raw=true'}}]}], 'max_tokens': 300}
+    data = {'model': 'Qwen/Qwen2.5-VL-7B-Instruct', 'messages': [{'role': 'user', 'content': [{'type': 'text', 'text': 'What\'s in this image?'}, {'type': 'image_url', 'image_url': {'url': example_image_url}}]}], 'max_tokens': 300}
     _response = requests.post(url, json=data)
     print_highlight(_response.text)
     return
@@ -99,10 +131,10 @@ def _(mo):
 
 
 @app.cell
-def _(port, print_highlight):
+def _(port, print_highlight, example_image_url):
     from openai import OpenAI
     _client = OpenAI(base_url=f'http://localhost:{port}/v1', api_key='None')
-    _response = _client.chat.completions.create(model='Qwen/Qwen2.5-VL-7B-Instruct', messages=[{'role': 'user', 'content': [{'type': 'text', 'text': 'What is in this image?'}, {'type': 'image_url', 'image_url': {'url': 'https://github.com/sgl-project/sglang/blob/main/test/lang/example_image.png?raw=true'}}]}], max_tokens=300)
+    _response = _client.chat.completions.create(model='Qwen/Qwen2.5-VL-7B-Instruct', messages=[{'role': 'user', 'content': [{'type': 'text', 'text': 'What is in this image?'}, {'type': 'image_url', 'image_url': {'url': example_image_url}}]}], max_tokens=300)
     print_highlight(_response.choices[0].message.content)
     return (OpenAI,)
 
@@ -118,9 +150,9 @@ def _(mo):
 
 
 @app.cell
-def _(OpenAI, port, print_highlight):
+def _(OpenAI, port, print_highlight, example_image_url):
     _client = OpenAI(base_url=f'http://localhost:{port}/v1', api_key='None')
-    _response = _client.chat.completions.create(model='Qwen/Qwen2.5-VL-7B-Instruct', messages=[{'role': 'user', 'content': [{'type': 'image_url', 'image_url': {'url': 'https://github.com/sgl-project/sglang/blob/main/test/lang/example_image.png?raw=true'}}, {'type': 'image_url', 'image_url': {'url': 'https://raw.githubusercontent.com/sgl-project/sglang/main/assets/logo.png'}}, {'type': 'text', 'text': 'I have two very different images. They are not related at all. Please describe the first image in one sentence, and then describe the second image in another sentence.'}]}], temperature=0)
+    _response = _client.chat.completions.create(model='Qwen/Qwen2.5-VL-7B-Instruct', messages=[{'role': 'user', 'content': [{'type': 'image_url', 'image_url': {'url': example_image_url}}, {'type': 'image_url', 'image_url': {'url': 'https://raw.githubusercontent.com/sgl-project/sglang/main/assets/logo.png'}}, {'type': 'text', 'text': 'I have two very different images. They are not related at all. Please describe the first image in one sentence, and then describe the second image in another sentence.'}]}], temperature=0)
     print_highlight(_response.choices[0].message.content)
     return
 

@@ -73,12 +73,22 @@ def _(mo):
 def _():
     # launch the offline engine
     import asyncio
+    import nest_asyncio
+
+    nest_asyncio.apply()
 
     import sglang as sgl
     import sglang.test.doc_patch
     from sglang.utils import async_stream_and_merge, stream_and_merge
 
-    llm = sgl.Engine(model_path="qwen/qwen2.5-0.5b-instruct")
+    # Initialize engine with triton backend to avoid nvcc compilation issues
+    # FlashInfer requires nvcc (CUDA compiler) which may not be available
+    # Triton backend doesn't require nvcc and works well for notebooks
+    llm = sgl.Engine(
+        model_path="qwen/qwen2.5-0.5b-instruct",
+        attention_backend="triton",
+        disable_cuda_graph=True
+    )
     return async_stream_and_merge, asyncio, llm, stream_and_merge
 
 

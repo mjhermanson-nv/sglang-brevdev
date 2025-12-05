@@ -256,8 +256,17 @@ def _(mo):
 @app.cell
 def _(AutoTokenizer, messages, print_highlight):
     import sglang as sgl
+    import nest_asyncio
+
+    nest_asyncio.apply()
+
     from sglang.srt.parser.reasoning_parser import ReasoningParser
-    llm = sgl.Engine(model_path='deepseek-ai/DeepSeek-R1-Distill-Qwen-7B')
+    # Initialize engine with triton backend to avoid nvcc compilation issues
+    llm = sgl.Engine(
+        model_path='deepseek-ai/DeepSeek-R1-Distill-Qwen-7B',
+        attention_backend="triton",
+        disable_cuda_graph=True
+    )
     _tokenizer = AutoTokenizer.from_pretrained('deepseek-ai/DeepSeek-R1-Distill-Qwen-7B')
     _input = _tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
     sampling_params = {'max_new_tokens': 1024, 'skip_special_tokens': False, 'temperature': 0.6, 'top_p': 0.95}

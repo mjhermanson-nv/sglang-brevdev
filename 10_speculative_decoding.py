@@ -50,52 +50,81 @@ def _(mo):
     return
 
 
-@app.cell(hide_code=True)
-def _():
-    import marimo as mo
-    hf_token_input = mo.ui.text(
-        label="HuggingFace Token",
-        placeholder="hf_...",
-        kind="password",
-        full_width=True
-    )
-    hf_token_input
-    return hf_token_input, mo
-
-
 @app.cell
-def _(hf_token_input):
+def _(mo):
     import os
+    import getpass
+    import re
+
+    mo.md(r"""
+    ## Hugging Face Authentication
+
+    Some models require a Hugging Face token for access. Please enter your token below.
+    """)
 
     # Set environment variable to allow longer context lengths for speculative decoding
     os.environ["SGLANG_ALLOW_OVERWRITE_LONGER_CONTEXT_LEN"] = "1"
 
-    if hf_token_input.value:
-        token = hf_token_input.value
-        os.environ["HF_TOKEN"] = token
-        os.environ["HUGGINGFACE_HUB_TOKEN"] = token
+    hf_token = None
+    # Check if token is already set in environment
+    existing_token = os.environ.get("HUGGING_FACE_HUB_TOKEN") or os.environ.get("HF_TOKEN") or os.environ.get("HUGGINGFACE_HUB_TOKEN")
 
-        # Also login programmatically to huggingface_hub
+    if existing_token:
+        mo.md(f"✅ Hugging Face token found in environment (length: {len(existing_token)})")
+        hf_token = existing_token
+    else:
+        try:
+            # Prompt for token via stdin (hidden input)
+            hf_token = getpass.getpass("Hugging Face Token: ").strip()
+            if not hf_token:
+                mo.md("⚠️ No token entered. Model access may fail if it's gated.")
+                hf_token = None
+            else:
+                # Validate token format
+                if len(hf_token) > 100:
+                    mo.md(f"⚠️  WARNING: Token appears too long ({len(hf_token)} chars). Hugging Face tokens are typically 40-50 characters.")
+                    mo.md("   Attempting to extract token starting with 'hf_'.")
+                    match = re.search(r"(hf_[a-zA-Z0-9_]+)", hf_token)
+                    if match:
+                        extracted_token = match.group(1)
+                        mo.md(f"   ✅ Extracted token: {extracted_token[:10]}... (length: {len(extracted_token)})")
+                        hf_token = extracted_token
+                    else:
+                        mo.md("   ❌ Token doesn't start with 'hf_'. Please check your token format.")
+                        hf_token = None
+
+                # Validate token contains only ASCII characters (required for HTTP headers)
+                if hf_token:
+                    try:
+                        hf_token.encode('ascii')
+                        os.environ["HUGGING_FACE_HUB_TOKEN"] = hf_token
+                        os.environ["HF_TOKEN"] = hf_token
+                        os.environ["HUGGINGFACE_HUB_TOKEN"] = hf_token
+                        mo.md(f"✅ **Token set!** (length: {len(hf_token)})")
+                    except UnicodeEncodeError:
+                        mo.md("⚠️ **Error:** Token contains non-ASCII characters. Please ensure your token only contains ASCII characters.")
+                        hf_token = None
+        except Exception as e:
+            mo.md(f"⚠️ **Error reading token:** {e}")
+            hf_token = None
+
+    mo.md("✅ Context length override enabled for speculative decoding")
+
+    # Also try to authenticate with huggingface_hub if token is available
+    if hf_token:
         try:
             from huggingface_hub import login
-            login(token=token, add_to_git_credential=False)
-            print(f"✓ HuggingFace token set and authenticated")
-            print(f"✓ Context length override enabled for speculative decoding")
-            print(f"⚠️  Note: If you get 403 errors, ensure your token has 'public gated repositories' permission")
-            print(f"   (Fine-grained tokens need this enabled; classic tokens have it by default)")
+            login(token=hf_token, add_to_git_credential=False)
+            mo.md("✅ Authenticated with huggingface_hub")
+            mo.md("⚠️  Note: If you get 403 errors, ensure your token has 'public gated repositories' permission")
+            mo.md("   (Fine-grained tokens need this enabled; classic tokens have it by default)")
         except ImportError:
-            print(f"✓ HuggingFace token set (install huggingface_hub for programmatic login)")
-            print(f"✓ Context length override enabled for speculative decoding")
+            mo.md("ℹ️  huggingface_hub not available. Token set in environment.")
         except Exception as e:
-            print(f"⚠️  Token set but login failed: {e}")
-            print(f"   Make sure your token has access to gated repositories")
-    elif os.environ.get("HF_TOKEN") or os.environ.get("HUGGINGFACE_HUB_TOKEN"):
-        print("✓ Using existing HuggingFace token from environment")
-        print(f"✓ Context length override enabled for speculative decoding")
-    else:
-        print("⚠️  No HuggingFace token set. Please enter your token above.")
-        print(f"✓ Context length override enabled for speculative decoding")
-    return
+            mo.md(f"⚠️  Token set but login failed: {e}")
+            mo.md("   Make sure your token has access to gated repositories")
+
+    return hf_token, os
 
 
 @app.cell(hide_code=True)

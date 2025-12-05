@@ -55,7 +55,7 @@ def _():
 
 
     server_process, port = launch_server_cmd(
-        "python -m sglang.launch_server --model-path deepseek-ai/DeepSeek-R1-Distill-Qwen-7B --host 0.0.0.0 --reasoning-parser deepseek-r1 --attention-backend triton --log-level warning"
+        "python3 -m sglang.launch_server --model-path deepseek-ai/DeepSeek-R1-Distill-Qwen-7B --host 0.0.0.0 --reasoning-parser deepseek-r1 --attention-backend triton --sampling-backend pytorch --disable-cuda-graph --log-level warning"
     )
 
     wait_for_server(f"http://localhost:{port}")
@@ -298,11 +298,17 @@ def _(mo):
 @app.cell
 def _():
     import sglang as sgl
+    import nest_asyncio
 
+    nest_asyncio.apply()
+
+    # Initialize engine with triton backend to avoid nvcc compilation issues
     llm = sgl.Engine(
         model_path="deepseek-ai/DeepSeek-R1-Distill-Qwen-7B",
         reasoning_parser="deepseek-r1",
         grammar_backend="xgrammar",
+        attention_backend="triton",
+        disable_cuda_graph=True
     )
     return (llm,)
 
