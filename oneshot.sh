@@ -293,8 +293,20 @@ export PATH="$HOME/.local/bin:$PATH"
 ##### Clone notebooks if URL provided #####
 if [ -n "$REPO_URL" ]; then
     (echo ""; echo "##### Cloning notebooks from $REPO_URL #####"; echo "";)
+    
+    # Ensure git is installed
+    if ! command -v git &> /dev/null; then
+        echo "Git not found, installing..."
+        sudo apt-get update -qq 2>&1 | grep -v "WARNING: apt does not have a stable CLI interface" || true
+        sudo apt-get install -y git
+    fi
+    
     cd "$HOME"
-    git clone "$REPO_URL" "$NOTEBOOKS_DIR" 2>/dev/null || echo "Repository already exists"
+    if git clone "$REPO_URL" "$NOTEBOOKS_DIR" 2>&1; then
+        echo "✅ Repository cloned successfully"
+    else
+        echo "⚠️  Repository may already exist or clone failed"
+    fi
     
     # Install dependencies if requirements.txt exists
     if [ -f "$HOME/$NOTEBOOKS_DIR/requirements.txt" ]; then
